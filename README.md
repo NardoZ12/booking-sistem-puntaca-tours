@@ -1,33 +1,44 @@
-# booking-sistem-puntaca-tours
+# Puntaca Tours — Sistema de Reservas
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
+## Cómo integrar en el repositorio existente
 
-## Built with v0
+Reemplaza estos archivos en tu repositorio de GitHub con los archivos de esta carpeta:
 
-This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo. Every merge to `main` will automatically deploy.
+### Archivos a REEMPLAZAR:
+| Archivo del repo | Reemplazar con |
+|---|---|
+| `app/layout.tsx` | `app/layout.tsx` |
+| `app/globals.css` | `app/globals.css` (sin cambios) |
+| `app/page.tsx` | `app/page.tsx` (nuevo dashboard) |
 
-[Continue working on v0 →](https://v0.app/chat/projects/prj_TQc0xbUKAu6xr8V7yVU9VXRiBMR0)
+### Archivos NUEVOS a agregar:
+| Archivo nuevo | Ubicación en repo |
+|---|---|
+| `lib/bookings.ts` | `/lib/bookings.ts` |
+| `components/BookingCard.tsx` | `/components/BookingCard.tsx` |
+| `components/PasteModal.tsx` | `/components/PasteModal.tsx` |
+| `app/viator/page.tsx` | `/app/viator/page.tsx` |
+| `app/getyourguide/page.tsx` | `/app/getyourguide/page.tsx` |
+| `app/venta-directa/page.tsx` | `/app/venta-directa/page.tsx` |
+| `app/historial/page.tsx` | `/app/historial/page.tsx` |
 
-## Getting Started
+### Archivos a ELIMINAR del repo (ya no se usan):
+- `app/command-center/page.tsx`
+- `app/agent-network/page.tsx`
+- `app/operations/page.tsx`
+- `app/intelligence/page.tsx`
+- `app/systems/page.tsx`
 
-First, run the development server:
+### package.json — sin cambios necesarios
+Todas las dependencias existentes son suficientes.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Funcionalidades
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-## Learn More
-
-To learn more, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
+- **Viator**: Pega el texto de reservas → se extraen automáticamente todos los datos
+- **GetYourGuide**: Igual que Viator, con parser específico para su formato
+- **Venta Directa**: Formulario manual con selector de tours
+- **Historial**: Vista global con filtros por fuente, fecha y búsqueda
+- **Mensajes**: Genera mensajes para choferes y clientes con un solo clic
+- **Edición**: Todos los campos son editables (hotel, meeting point, hora, etc.)

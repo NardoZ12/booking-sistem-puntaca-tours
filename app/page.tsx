@@ -1,113 +1,158 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronRight, Monitor, Settings, Shield, Target, Users, Bell, RefreshCw } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import CommandCenterPage from "./command-center/page"
-import AgentNetworkPage from "./agent-network/page"
-import OperationsPage from "./operations/page"
-import IntelligencePage from "./intelligence/page"
-import SystemsPage from "./systems/page"
+import { ChevronRight, Bell, RefreshCw } from "lucide-react"
+import ViatorPage from "./viator/page"
+import GYGPage from "./getyourguide/page"
+import VentaDirectaPage from "./venta-directa/page"
+import HistorialPage from "./historial/page"
+import { SAMPLE_BOOKINGS, type Booking } from "@/lib/bookings"
 
-export default function TacticalDashboard() {
+export default function PuntacaToursDashboard() {
   const [activeSection, setActiveSection] = useState("overview")
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [bookings, setBookings] = useState<Booking[]>(SAMPLE_BOOKINGS)
+
+  const addBooking = (b: Booking) => setBookings((prev) => [b, ...prev])
+  const updateBooking = (updated: Booking) =>
+    setBookings((prev) => prev.map((b) => (b.id === updated.id ? updated : b)))
+  const deleteBooking = (id: number) =>
+    setBookings((prev) => prev.filter((b) => b.id !== id))
+
+  const viatorBookings = bookings.filter((b) => b.source === "viator")
+  const gygBookings = bookings.filter((b) => b.source === "gyg")
+  const directBookings = bookings.filter((b) => b.source === "direct")
+  const todayStr = new Date().toLocaleDateString("es-DO", { weekday: "short", day: "numeric", month: "short" })
+
+  const navItems = [
+    { id: "overview", label: "HISTORIAL DE RESERVAS", icon: "📋" },
+    { id: "gyg", label: "GET YOUR GUIDE", icon: "🟠" },
+    { id: "viator", label: "VIATOR", icon: "🟢" },
+    { id: "direct", label: "VENTA DIRECTA", icon: "🟣" },
+  ]
+
+  const recentBookings = [...bookings].sort((a, b) => (b.id || 0) - (a.id || 0)).slice(0, 5)
 
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
       <div
-        className={`${sidebarCollapsed ? "w-16" : "w-70"} bg-neutral-900 border-r border-neutral-700 transition-all duration-300 fixed md:relative z-50 md:z-auto h-full md:h-auto ${!sidebarCollapsed ? "md:block" : ""}`}
+        className={`${sidebarCollapsed ? "w-16" : "w-72"} bg-neutral-900 border-r border-neutral-700 transition-all duration-300 fixed md:relative z-50 md:z-auto h-full`}
       >
         <div className="p-4">
+          {/* Logo */}
           <div className="flex items-center justify-between mb-8">
             <div className={`${sidebarCollapsed ? "hidden" : "block"}`}>
-              <h1 className="text-orange-500 font-bold text-lg tracking-wider">TACTICAL OPS</h1>
-              <p className="text-neutral-500 text-xs">v2.1.7 CLASSIFIED</p>
+              <h1 className="text-orange-500 font-bold text-lg tracking-wider">PUNTACA TOURS</h1>
+              <p className="text-neutral-500 text-xs">Sistema de Reservas</p>
             </div>
-            <Button
+            <button
               variant="ghost"
               size="icon"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="text-neutral-400 hover:text-orange-500"
+              className="text-neutral-400 hover:text-orange-500 bg-transparent border-0 cursor-pointer p-1"
             >
               <ChevronRight
-                className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform ${sidebarCollapsed ? "" : "rotate-180"}`}
+                className={`w-5 h-5 transition-transform ${sidebarCollapsed ? "" : "rotate-180"}`}
               />
-            </Button>
+            </button>
           </div>
 
-          <nav className="space-y-2">
-            {[
-              { id: "overview", icon: Monitor, label: "COMMAND CENTER" },
-              { id: "agents", icon: Users, label: "AGENT NETWORK" },
-              { id: "operations", icon: Target, label: "OPERATIONS" },
-              { id: "intelligence", icon: Shield, label: "INTELLIGENCE" },
-              { id: "systems", icon: Settings, label: "SYSTEMS" },
-            ].map((item) => (
+          {/* Nav */}
+          <nav className="space-y-1">
+            {navItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => setActiveSection(item.id)}
-                className={`w-full flex items-center gap-3 p-3 rounded transition-colors ${
+                className={`w-full flex items-center gap-3 p-3 rounded transition-colors text-left ${
                   activeSection === item.id
                     ? "bg-orange-500 text-white"
                     : "text-neutral-400 hover:text-white hover:bg-neutral-800"
                 }`}
               >
-                <item.icon className="w-5 h-5 md:w-5 md:h-5 sm:w-6 sm:h-6" />
-                {!sidebarCollapsed && <span className="text-sm font-medium">{item.label}</span>}
+                <span className="text-sm">{item.icon}</span>
+                {!sidebarCollapsed && (
+                  <span className="text-sm font-medium tracking-wider">{item.label}</span>
+                )}
               </button>
             ))}
           </nav>
 
+          {/* Status panel */}
           {!sidebarCollapsed && (
             <div className="mt-8 p-4 bg-neutral-800 border border-neutral-700 rounded">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                <span className="text-xs text-white">SYSTEM ONLINE</span>
+                <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                <span className="text-xs text-white">SISTEMA ACTIVO</span>
               </div>
-              <div className="text-xs text-neutral-500">
-                <div>UPTIME: 72:14:33</div>
-                <div>AGENTS: 847 ACTIVE</div>
-                <div>MISSIONS: 23 ONGOING</div>
+              <div className="text-xs text-neutral-500 space-y-1">
+                <div>VIATOR: {viatorBookings.length} reservas</div>
+                <div>GYG: {gygBookings.length} reservas</div>
+                <div>DIRECTAS: {directBookings.length} reservas</div>
+                <div className="pt-1 text-orange-500">TOTAL: {bookings.length} reservas</div>
               </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Mobile Overlay */}
-      {!sidebarCollapsed && (
-        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarCollapsed(true)} />
-      )}
-
-      {/* Main Content */}
-      <div className={`flex-1 flex flex-col ${!sidebarCollapsed ? "md:ml-0" : ""}`}>
-        {/* Top Toolbar */}
-        <div className="h-16 bg-neutral-800 border-b border-neutral-700 flex items-center justify-between px-6">
-          <div className="flex items-center gap-4">
-            <div className="text-sm text-neutral-400">
-              TACTICAL COMMAND / <span className="text-orange-500">OVERVIEW</span>
-            </div>
+      {/* Main content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Topbar */}
+        <div className="h-16 bg-neutral-800 border-b border-neutral-700 flex items-center justify-between px-6 flex-shrink-0">
+          <div className="text-sm text-neutral-400 tracking-wider">
+            PUNTACA TOURS /{" "}
+            <span className="text-orange-500">
+              {navItems.find((n) => n.id === activeSection)?.label || "OVERVIEW"}
+            </span>
           </div>
           <div className="flex items-center gap-4">
-            <div className="text-xs text-neutral-500">LAST UPDATE: 05/06/2025 20:00 UTC</div>
-            <Button variant="ghost" size="icon" className="text-neutral-400 hover:text-orange-500">
+            <div className="text-xs text-neutral-500">{todayStr.toUpperCase()}</div>
+            <button className="text-neutral-400 hover:text-orange-500 bg-transparent border-0 cursor-pointer">
               <Bell className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-neutral-400 hover:text-orange-500">
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="text-neutral-400 hover:text-orange-500 bg-transparent border-0 cursor-pointer"
+            >
               <RefreshCw className="w-4 h-4" />
-            </Button>
+            </button>
           </div>
         </div>
 
-        {/* Dashboard Content */}
+        {/* Page content */}
         <div className="flex-1 overflow-auto">
-          {activeSection === "overview" && <CommandCenterPage />}
-          {activeSection === "agents" && <AgentNetworkPage />}
-          {activeSection === "operations" && <OperationsPage />}
-          {activeSection === "intelligence" && <IntelligencePage />}
-          {activeSection === "systems" && <SystemsPage />}
+          {activeSection === "overview" && (
+            <HistorialPage
+              bookings={bookings}
+              onUpdate={updateBooking}
+              onDelete={deleteBooking}
+            />
+          )}
+          {activeSection === "viator" && (
+            <ViatorPage
+              bookings={viatorBookings}
+              onAdd={addBooking}
+              onUpdate={updateBooking}
+              onDelete={deleteBooking}
+            />
+          )}
+          {activeSection === "gyg" && (
+            <GYGPage
+              bookings={gygBookings}
+              onAdd={addBooking}
+              onUpdate={updateBooking}
+              onDelete={deleteBooking}
+            />
+          )}
+          {activeSection === "direct" && (
+            <VentaDirectaPage
+              bookings={directBookings}
+              onAdd={addBooking}
+              onUpdate={updateBooking}
+              onDelete={deleteBooking}
+            />
+          )}
         </div>
       </div>
     </div>
