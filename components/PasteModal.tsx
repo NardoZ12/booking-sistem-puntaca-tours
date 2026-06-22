@@ -17,7 +17,7 @@ const CONFIG = {
 
 export default function PasteModal({ source, onClose, onAdd }: PasteModalProps) {
   const [text, setText] = useState("")
-  const [step, setStep] = useState<"paste" | "review">("paste")
+  const [step, setStep] = useState<"paste" | "edit_details" | "review">("paste")
   const [fields, setFields] = useState<Partial<Booking>>({})
   const cfg = CONFIG[source]
 
@@ -25,7 +25,7 @@ export default function PasteModal({ source, onClose, onAdd }: PasteModalProps) 
     const data = cfg.parse(text)
     data.meetingPoint = data.meetingPoint || "Lobby"
     setFields(data)
-    setStep("review")
+    setStep("edit_details")
   }
 
   const submit = () => {
@@ -50,6 +50,12 @@ export default function PasteModal({ source, onClose, onAdd }: PasteModalProps) 
     ["# Personas", "guests"],
   ]
 
+  const editableFields: [string, keyof Booking][] = [
+    ["Hotel", "hotel"],
+    ["Punto de Recogida", "meetingPoint"],
+    ["Hora de Recogida", "time"],
+  ]
+
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="bg-neutral-900 border border-neutral-700 rounded-xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
@@ -63,7 +69,7 @@ export default function PasteModal({ source, onClose, onAdd }: PasteModalProps) 
               {cfg.label}
             </span>
             <span className="text-sm font-medium text-white tracking-wider">
-              {step === "paste" ? "PEGAR RESERVA" : "REVISAR Y CONFIRMAR"}
+              {step === "paste" ? "PEGAR RESERVA" : step === "edit_details" ? "EDITAR DETALLES" : "REVISAR Y CONFIRMAR"}
             </span>
           </div>
           <button onClick={onClose} className="text-neutral-500 hover:text-white bg-transparent border-0 cursor-pointer">
@@ -100,10 +106,43 @@ export default function PasteModal({ source, onClose, onAdd }: PasteModalProps) 
                 </button>
               </div>
             </>
+          ) : step === "edit_details" ? (
+            <>
+              <p className="text-sm text-neutral-400 mb-4">
+                Por favor, verifica y edita estos detalles importantes:
+              </p>
+              <div className="space-y-4">
+                {editableFields.map(([label, key]) => (
+                  <div key={key}>
+                    <label className="text-xs text-neutral-500 block mb-2 font-semibold">{label}</label>
+                    <input
+                      value={String(fields[key] || "")}
+                      onChange={(e) => setFields((f) => ({ ...f, [key]: e.target.value }))}
+                      className="w-full text-sm px-4 py-2.5 rounded-lg bg-neutral-800 border border-neutral-600 text-white focus:border-orange-500 outline-none"
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setStep("review")}
+                  className="flex-1 py-2.5 text-sm rounded-lg cursor-pointer font-medium tracking-wider"
+                  style={{ background: cfg.color, color: "#fff", border: "none" }}
+                >
+                  CONTINUAR
+                </button>
+                <button
+                  onClick={() => setStep("paste")}
+                  className="px-4 py-2.5 text-sm rounded-lg bg-transparent border border-neutral-600 text-neutral-400 cursor-pointer hover:border-neutral-400"
+                >
+                  Atrás
+                </button>
+              </div>
+            </>
           ) : (
             <>
               <p className="text-sm text-neutral-400 mb-4">
-                Revisa los datos extraídos. Puedes editar cualquier campo antes de guardar.
+                Revisa todos los datos. Puedes editar cualquier campo antes de guardar.
               </p>
               <div className="grid grid-cols-2 gap-3 mb-4">
                 {editFields.map(([label, key]) => (
@@ -140,7 +179,7 @@ export default function PasteModal({ source, onClose, onAdd }: PasteModalProps) 
                   GUARDAR RESERVA
                 </button>
                 <button
-                  onClick={() => setStep("paste")}
+                  onClick={() => setStep("edit_details")}
                   className="px-4 py-2.5 text-sm rounded-lg bg-transparent border border-neutral-600 text-neutral-400 cursor-pointer hover:border-neutral-400"
                 >
                   Atrás

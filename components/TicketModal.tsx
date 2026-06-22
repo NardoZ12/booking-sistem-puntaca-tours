@@ -12,7 +12,7 @@ interface TicketModalProps {
 
 export default function TicketModal({ booking, onClose }: TicketModalProps) {
   const ticketRef = useRef<HTMLDivElement>(null)
-  const [downloading, setDownloading] = useState<"pdf" | "jpg" | "">("")
+  const [downloading, setDownloading] = useState<"pdf" | "jpg" | "png" | "">("")
 
   const handleDownloadPDF = async () => {
     if (!ticketRef.current) return
@@ -44,6 +44,21 @@ export default function TicketModal({ booking, onClose }: TicketModalProps) {
     }
   }
 
+  const handleDownloadPNG = async () => {
+    if (!ticketRef.current) return
+    setDownloading("png" as any)
+    try {
+      // Dynamic import to avoid SSR issues
+      const { downloadTicketPNG: downloadPNG } = await import("@/lib/ticket-download")
+      await downloadPNG(ticketRef.current, booking)
+    } catch (error) {
+      console.error("Failed to download PNG:", error)
+      alert("Error al descargar PNG")
+    } finally {
+      setDownloading("")
+    }
+  }
+
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="bg-neutral-900 border border-neutral-700 rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -63,7 +78,7 @@ export default function TicketModal({ booking, onClose }: TicketModalProps) {
 
         <div className="p-5">
           {/* Download Buttons */}
-          <div className="flex gap-3 mb-6">
+          <div className="flex gap-3 mb-6 flex-wrap">
             <button
               onClick={handleDownloadPDF}
               disabled={downloading !== ""}
@@ -79,6 +94,14 @@ export default function TicketModal({ booking, onClose }: TicketModalProps) {
             >
               {downloading === "jpg" ? <Loader className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
               Descargar JPG
+            </button>
+            <button
+              onClick={handleDownloadPNG}
+              disabled={downloading !== ""}
+              className="flex items-center gap-2 px-4 py-2.5 text-sm rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {downloading === "png" ? <Loader className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+              Descargar PNG
             </button>
             <button
               onClick={onClose}

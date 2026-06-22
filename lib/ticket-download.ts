@@ -63,3 +63,22 @@ export async function downloadTicketJPG(element: HTMLElement, booking: Booking) 
     throw error
   }
 }
+
+export async function downloadTicketPNG(element: HTMLElement, booking: Booking) {
+  try {
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      backgroundColor: "#ffffff",
+      useCORS: true,
+      logging: false,
+    })
+
+    const link = document.createElement("a")
+    link.href = canvas.toDataURL("image/png")
+    link.download = `ticket-${booking.confirmation || booking.id}.png`
+    link.click()
+  } catch (error) {
+    console.error("Error generating PNG:", error)
+    throw error
+  }
+}

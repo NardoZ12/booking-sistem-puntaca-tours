@@ -1,14 +1,31 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronRight, Bell, RefreshCw } from "lucide-react"
+import { ChevronRight, Bell, RefreshCw, LogOut } from "lucide-react"
 import ViatorPage from "./viator/page"
 import GYGPage from "./getyourguide/page"
 import VentaDirectaPage from "./venta-directa/page"
 import HistorialPage from "./historial/page"
 import { SAMPLE_BOOKINGS, type Booking } from "@/lib/bookings"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function PuntacaToursDashboard() {
+  const { operator, loading, logout } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-neutral-900">
+        <div className="text-center">
+          <div className="text-4xl mb-4">🌴</div>
+          <p className="text-white">Cargando...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!operator) {
+    return null // useAuth redirige al login
+  }
   const [activeSection, setActiveSection] = useState("overview")
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [bookings, setBookings] = useState<Booking[]>(SAMPLE_BOOKINGS)
@@ -108,6 +125,9 @@ export default function PuntacaToursDashboard() {
           </div>
           <div className="flex items-center gap-4">
             <div className="text-xs text-neutral-500">{todayStr.toUpperCase()}</div>
+            <div className="flex items-center gap-2 text-xs text-neutral-400 border-l border-neutral-700 pl-4">
+              <span>{operator?.name}</span>
+            </div>
             <button className="text-neutral-400 hover:text-orange-500 bg-transparent border-0 cursor-pointer">
               <Bell className="w-4 h-4" />
             </button>
@@ -116,6 +136,13 @@ export default function PuntacaToursDashboard() {
               className="text-neutral-400 hover:text-orange-500 bg-transparent border-0 cursor-pointer"
             >
               <RefreshCw className="w-4 h-4" />
+            </button>
+            <button
+              onClick={logout}
+              className="text-neutral-400 hover:text-red-500 bg-transparent border-0 cursor-pointer p-1"
+              title="Cerrar sesión"
+            >
+              <LogOut className="w-4 h-4" />
             </button>
           </div>
         </div>
