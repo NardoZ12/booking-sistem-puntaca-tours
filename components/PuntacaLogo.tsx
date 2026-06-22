@@ -32,13 +32,10 @@ export function PuntacaLogo({ size = 64, className = "", width, height }: Puntac
       <img
         src="/logo.jpg"
         alt="Puntaca Tours Logo"
-        width={logoWidth}
-        height={logoHeight}
         style={{
-          width: "auto",
-          height: "auto",
-          maxWidth: "100%",
-          maxHeight: "100%",
+          width: logoWidth,
+          height: logoHeight,
+          objectFit: "contain",
         }}
         className={className}
       />

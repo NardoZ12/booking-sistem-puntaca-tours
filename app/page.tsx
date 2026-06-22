@@ -62,14 +62,14 @@ export default function PuntacaToursDashboard() {
           <div className="flex items-center justify-between mb-6">
             {!sidebarCollapsed && (
               <div className="flex items-center gap-3">
-                <PuntacaLogo size={40} />
+                <PuntacaLogo size={24} />
                 <div>
                   <h1 className="text-orange-500 font-bold text-sm tracking-wider">PUNTACA</h1>
                   <p className="text-neutral-500 text-xs">Sistema de Reservas</p>
                 </div>
               </div>
             )}
-            {sidebarCollapsed && <PuntacaLogo size={32} />}
+            {sidebarCollapsed && <PuntacaLogo size={20} />}
             <button
               variant="ghost"
               size="icon"
