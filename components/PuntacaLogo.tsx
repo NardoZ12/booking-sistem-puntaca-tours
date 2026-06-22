@@ -48,7 +48,7 @@ export function PuntacaLogo({ size = 64, className = "", width, height }: Puntac
   return (
     <div className={className}>
       <Image
-        src="/logo.png"
+        src="/logo.jpg"
         alt="Puntaca Tours Logo"
         width={logoWidth}
         height={logoHeight}
