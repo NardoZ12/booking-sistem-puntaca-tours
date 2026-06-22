@@ -6,9 +6,9 @@ import BookingCard from "@/components/BookingCard"
 import { type Booking } from "@/lib/bookings"
 
 interface Props {
-  bookings: Booking[]
-  onUpdate: (b: Booking) => void
-  onDelete: (id: number) => void
+  bookings?: Booking[]
+  onUpdate?: (b: Booking) => void
+  onDelete?: (id: number) => void
 }
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -22,7 +22,7 @@ const SOURCE_COLORS: Record<string, string> = {
   direct: "#8B5CF6",
 }
 
-export default function HistorialPage({ bookings, onUpdate, onDelete }: Props) {
+export default function HistorialPage({ bookings = [], onUpdate = () => {}, onDelete = () => {} }: Props) {
   const [search, setSearch] = useState("")
   const [sourceFilter, setSourceFilter] = useState<string>("all")
   const [dateFilter, setDateFilter] = useState("")

@@ -6,10 +6,10 @@ import BookingCard from "@/components/BookingCard"
 import { type Booking, ALL_TOURS } from "@/lib/bookings"
 
 interface Props {
-  bookings: Booking[]
-  onAdd: (b: Booking) => void
-  onUpdate: (b: Booking) => void
-  onDelete: (id: number) => void
+  bookings?: Booking[]
+  onAdd?: (b: Booking) => void
+  onUpdate?: (b: Booking) => void
+  onDelete?: (id: number) => void
 }
 
 const emptyForm = {
@@ -121,7 +121,7 @@ function DirectForm({ onAdd, onClose }: { onAdd: (b: Booking) => void; onClose: 
   )
 }
 
-export default function VentaDirectaPage({ bookings, onAdd, onUpdate, onDelete }: Props) {
+export default function VentaDirectaPage({ bookings = [], onAdd = () => {}, onUpdate = () => {}, onDelete = () => {} }: Props) {
   const [showForm, setShowForm] = useState(false)
   const [search, setSearch] = useState("")
 
