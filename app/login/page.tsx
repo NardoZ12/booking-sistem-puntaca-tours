@@ -57,7 +57,7 @@ export default function LoginPage() {
         {/* Logo and Title */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
-            <PuntacaLogo size={120} />
+            <PuntacaLogo size={80} />
           </div>
           <h1 className="text-4xl font-bold text-white mb-2 tracking-wider">PUNTACA TOURS</h1>
           <p className="text-orange-500 font-semibold">Sistema de Reservas</p>
