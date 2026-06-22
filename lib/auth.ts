@@ -1,8 +1,5 @@
 // Simple authentication helper
-export const OPERATORS = [
-  { email: "operador@puntacatours.com", password: "puntaca123", name: "Operador Principal" },
-  { email: "admin@puntacatours.com", password: "admin123", name: "Administrador" },
-]
+export const OPERATORS = []
 
 export function validateOperator(email: string, password: string) {
   return OPERATORS.find((op) => op.email === email && op.password === password)
