@@ -6,16 +6,30 @@ export function useAuth() {
   const router = useRouter()
   const [operator, setOperator] = useState<ReturnType<typeof getStoredOperator>>(null)
   const [loading, setLoading] = useState(true)
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
-    const stored = getStoredOperator()
-    if (!stored) {
+    // Only run on client side
+    setIsMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isMounted) return
+
+    try {
+      const stored = getStoredOperator()
+      if (!stored) {
+        router.replace("/login")
+      } else {
+        setOperator(stored)
+      }
+    } catch (error) {
+      console.error("Auth error:", error)
       router.replace("/login")
-    } else {
-      setOperator(stored)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
-  }, [router])
+  }, [isMounted, router])
 
   const logout = () => {
     clearStoredOperator()

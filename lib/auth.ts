@@ -15,9 +15,11 @@ export function getStoredOperator(): typeof OPERATORS[0] | null {
 }
 
 export function setStoredOperator(operator: typeof OPERATORS[0]) {
+  if (typeof window === "undefined") return
   localStorage.setItem("current_operator", JSON.stringify(operator))
 }
 
 export function clearStoredOperator() {
+  if (typeof window === "undefined") return
   localStorage.removeItem("current_operator")
 }
