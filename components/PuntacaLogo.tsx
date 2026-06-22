@@ -1,5 +1,7 @@
 "use client"
 
+import { useState, useEffect } from "react"
+
 interface PuntacaLogoProps {
   size?: number
   className?: string
@@ -10,6 +12,38 @@ interface PuntacaLogoProps {
 export function PuntacaLogo({ size = 64, className = "", width, height }: PuntacaLogoProps) {
   const logoWidth = width || size
   const logoHeight = height || size
+  const [useImage, setUseImage] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    const img = new Image()
+    img.onload = () => setUseImage(true)
+    img.onerror = () => setUseImage(false)
+    img.src = "/puntaca-logo.png"
+  }, [])
+
+  if (!mounted) {
+    return <div style={{ width: logoWidth, height: logoHeight }} />
+  }
+
+  if (useImage) {
+    return (
+      <img
+        src="/puntaca-logo.png"
+        alt="Puntaca Tours Logo"
+        width={logoWidth}
+        height={logoHeight}
+        style={{
+          width: "auto",
+          height: "auto",
+          maxWidth: "100%",
+          maxHeight: "100%",
+        }}
+        className={className}
+      />
+    )
+  }
 
   return (
     <svg
