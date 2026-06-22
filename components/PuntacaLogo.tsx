@@ -20,7 +20,7 @@ export function PuntacaLogo({ size = 64, className = "", width, height }: Puntac
     const img = new Image()
     img.onload = () => setUseImage(true)
     img.onerror = () => setUseImage(false)
-    img.src = "/puntaca-logo.png"
+    img.src = "/logo.jpg"
   }, [])
 
   if (!mounted) {
@@ -30,7 +30,7 @@ export function PuntacaLogo({ size = 64, className = "", width, height }: Puntac
   if (useImage) {
     return (
       <img
-        src="/puntaca-logo.png"
+        src="/logo.jpg"
         alt="Puntaca Tours Logo"
         width={logoWidth}
         height={logoHeight}
