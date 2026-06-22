@@ -12,6 +12,15 @@ import { PuntacaLogo } from "@/components/PuntacaLogo"
 
 export default function PuntacaToursDashboard() {
   const { operator, loading, logout } = useAuth()
+  const [activeSection, setActiveSection] = useState("overview")
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [bookings, setBookings] = useState<Booking[]>(SAMPLE_BOOKINGS)
+
+  const addBooking = (b: Booking) => setBookings((prev) => [b, ...prev])
+  const updateBooking = (updated: Booking) =>
+    setBookings((prev) => prev.map((b) => (b.id === updated.id ? updated : b)))
+  const deleteBooking = (id: number) =>
+    setBookings((prev) => prev.filter((b) => b.id !== id))
 
   if (loading) {
     return (
@@ -27,15 +36,6 @@ export default function PuntacaToursDashboard() {
   if (!operator) {
     return null // useAuth redirige al login
   }
-  const [activeSection, setActiveSection] = useState("overview")
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [bookings, setBookings] = useState<Booking[]>(SAMPLE_BOOKINGS)
-
-  const addBooking = (b: Booking) => setBookings((prev) => [b, ...prev])
-  const updateBooking = (updated: Booking) =>
-    setBookings((prev) => prev.map((b) => (b.id === updated.id ? updated : b)))
-  const deleteBooking = (id: number) =>
-    setBookings((prev) => prev.filter((b) => b.id !== id))
 
   const viatorBookings = bookings.filter((b) => b.source === "viator")
   const gygBookings = bookings.filter((b) => b.source === "gyg")

@@ -27,8 +27,12 @@ export default function LoginPage() {
       }
 
       setStoredOperator(operator)
-      router.push("/")
+      // Use replace instead of push to avoid issues
+      setTimeout(() => {
+        router.replace("/")
+      }, 100)
     } catch (err) {
+      console.error("Login error:", err)
       setError("Error al iniciar sesión")
       setLoading(false)
     }
@@ -36,7 +40,9 @@ export default function LoginPage() {
 
   const handleDemo = (op: typeof OPERATORS[0]) => {
     setStoredOperator(op)
-    router.push("/")
+    setTimeout(() => {
+      router.replace("/")
+    }, 100)
   }
 
   return (
