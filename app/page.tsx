@@ -8,6 +8,7 @@ import VentaDirectaPage from "./venta-directa/page"
 import HistorialPage from "./historial/page"
 import { SAMPLE_BOOKINGS, type Booking } from "@/lib/bookings"
 import { useAuth } from "@/hooks/useAuth"
+import { PuntacaLogo } from "@/components/PuntacaLogo"
 
 export default function PuntacaToursDashboard() {
   const { operator, loading, logout } = useAuth()
@@ -58,11 +59,17 @@ export default function PuntacaToursDashboard() {
       >
         <div className="p-4">
           {/* Logo */}
-          <div className="flex items-center justify-between mb-8">
-            <div className={`${sidebarCollapsed ? "hidden" : "block"}`}>
-              <h1 className="text-orange-500 font-bold text-lg tracking-wider">PUNTACA TOURS</h1>
-              <p className="text-neutral-500 text-xs">Sistema de Reservas</p>
-            </div>
+          <div className="flex items-center justify-between mb-6">
+            {!sidebarCollapsed && (
+              <div className="flex items-center gap-3">
+                <PuntacaLogo size={40} />
+                <div>
+                  <h1 className="text-orange-500 font-bold text-sm tracking-wider">PUNTACA</h1>
+                  <p className="text-neutral-500 text-xs">Sistema de Reservas</p>
+                </div>
+              </div>
+            )}
+            {sidebarCollapsed && <PuntacaLogo size={32} />}
             <button
               variant="ghost"
               size="icon"

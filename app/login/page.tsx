@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { LogIn } from "lucide-react"
 import { validateOperator, setStoredOperator, OPERATORS } from "@/lib/auth"
+import { PuntacaLogo } from "@/components/PuntacaLogo"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -49,7 +50,9 @@ export default function LoginPage() {
       <div className="w-full max-w-md relative z-10">
         {/* Logo and Title */}
         <div className="text-center mb-8">
-          <div className="text-5xl mb-4">🌴</div>
+          <div className="flex justify-center mb-6">
+            <PuntacaLogo size={120} />
+          </div>
           <h1 className="text-4xl font-bold text-white mb-2 tracking-wider">PUNTACA TOURS</h1>
           <p className="text-orange-500 font-semibold">Sistema de Reservas</p>
         </div>

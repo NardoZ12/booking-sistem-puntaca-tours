@@ -3,6 +3,7 @@
 import { forwardRef } from "react"
 import { QRCodeSVG } from "qrcode.react"
 import type { Booking } from "@/lib/bookings"
+import { PuntacaLogo } from "./PuntacaLogo"
 
 interface TicketGeneratorProps {
   booking: Booking
@@ -32,7 +33,12 @@ export const TicketGenerator = forwardRef<HTMLDivElement, TicketGeneratorProps>(
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-8" style={{ minHeight: "1000px" }}>
           {/* Header */}
           <div className="text-center mb-6">
-            <h1 className="text-4xl font-bold mb-2">🌴 PUNTACA TOURS 🌴</h1>
+            <div className="flex justify-center mb-4">
+              <div style={{ background: "#001a4d", padding: "8px", borderRadius: "8px" }}>
+                <PuntacaLogo size={80} />
+              </div>
+            </div>
+            <h1 className="text-4xl font-bold mb-2">PUNTACA TOURS</h1>
             <p className="text-orange-100 text-lg">Sistema de Reservas</p>
             <div className="border-b-2 border-white/30 my-4"></div>
           </div>
