@@ -3,66 +3,77 @@ export function PuntacaLogo({ size = 64, className = "" }: { size?: number; clas
     <svg
       width={size}
       height={size}
-      viewBox="0 0 240 240"
+      viewBox="0 0 800 600"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
+      preserveAspectRatio="xMidYMid meet"
     >
-      {/* Background - Dark blue */}
-      <rect width="240" height="240" fill="#001a4d" />
+      {/* Background - Dark blue (#001a4d) */}
+      <rect width="800" height="600" fill="#001a4d" />
 
-      {/* Shirt/Flag shape - White background */}
-      <g>
-        {/* Main shirt body */}
+      {/* Moon/Smile shape - Light gray (#d0d0d0) */}
+      <path
+        d="M 150 300 Q 200 200 300 150 Q 450 80 550 150 L 550 450 Q 500 500 350 520 Q 200 530 150 450 Z"
+        fill="#d0d0d0"
+      />
+
+      {/* Water waves inside the smile - Dark blue (#0052a3) */}
+      <g fill="#0052a3">
+        {/* Wave 1 */}
         <path
-          d="M 60 40 L 180 40 L 180 150 Q 180 170 160 170 L 100 170 Q 80 170 80 150 L 80 40 Z"
-          fill="white"
+          d="M 200 380 Q 250 350 300 380 Q 350 410 400 380 Q 450 350 500 380 L 500 440 Q 450 410 400 440 Q 350 470 300 440 Q 250 410 200 440 Z"
         />
-        {/* Shirt sleeves */}
-        <rect x="35" y="70" width="30" height="45" rx="8" fill="white" />
-        <rect x="175" y="70" width="30" height="45" rx="8" fill="white" />
+        {/* Wave 2 - darker/shadowed effect */}
+        <path
+          d="M 200 420 Q 250 390 300 420 Q 350 450 400 420 Q 450 390 500 420 L 500 460 Q 450 430 400 460 Q 350 490 300 460 Q 250 430 200 460 Z"
+          opacity="0.8"
+        />
       </g>
 
-      {/* Sun - Orange/Yellow */}
-      <circle cx="85" cy="65" r="20" fill="#ff8c00" />
+      {/* Sun - Orange (#ff9900) */}
+      <circle cx="380" cy="260" r="70" fill="#ff9900" />
 
-      {/* Water waves - Blue */}
-      <g fill="none" stroke="#0066cc" strokeWidth="6" strokeLinecap="round">
-        <path d="M 70 115 Q 80 105 90 115 T 110 115 T 130 115" />
-        <path d="M 60 130 Q 70 120 80 130 T 100 130 T 120 130" />
-      </g>
-
-      {/* Palm tree - White lines */}
-      <g stroke="white" strokeWidth="5" strokeLinecap="round" fill="none">
+      {/* Palm Tree - White (#e8e8e8) */}
+      <g fill="#e8e8e8">
         {/* Trunk */}
-        <line x1="155" y1="100" x2="155" y2="145" />
+        <rect x="535" y="340" width="35" height="120" rx="8" />
 
-        {/* Fronds - top left */}
-        <path d="M 155 105 Q 135 75 125 65" />
-        <path d="M 155 105 Q 140 85 130 75" />
+        {/* Palm fronds */}
+        {/* Top left fronds */}
+        <ellipse cx="480" cy="240" rx="50" ry="25" transform="rotate(-45 480 240)" />
+        <ellipse cx="450" cy="200" rx="45" ry="22" transform="rotate(-60 450 200)" />
+        <ellipse cx="430" cy="260" rx="40" ry="20" transform="rotate(-25 430 260)" />
 
-        {/* Fronds - top right */}
-        <path d="M 155 105 Q 175 75 185 65" />
-        <path d="M 155 105 Q 170 85 180 75" />
+        {/* Top right fronds */}
+        <ellipse cx="625" cy="240" rx="50" ry="25" transform="rotate(45 625 240)" />
+        <ellipse cx="655" cy="200" rx="45" ry="22" transform="rotate(60 655 200)" />
+        <ellipse cx="675" cy="260" rx="40" ry="20" transform="rotate(25 675 260)" />
 
-        {/* Fronds - middle */}
-        <path d="M 155 115 Q 135 105 125 100" />
-        <path d="M 155 115 Q 175 105 185 100" />
-
-        {/* Fronds - bottom */}
-        <path d="M 155 130 Q 135 135 125 145" />
-        <path d="M 155 130 Q 175 135 185 145" />
+        {/* Bottom fronds */}
+        <ellipse cx="470" cy="340" rx="45" ry="22" transform="rotate(-35 470 340)" />
+        <ellipse cx="630" cy="340" rx="45" ry="22" transform="rotate(35 630 340)" />
+        <ellipse cx="480" cy="380" rx="40" ry="20" transform="rotate(-20 480 380)" />
+        <ellipse cx="620" cy="380" rx="40" ry="20" transform="rotate(20 620 380)" />
       </g>
 
-      {/* Airplane - White */}
-      <g fill="white" opacity="0.95">
-        {/* Airplane body */}
-        <ellipse cx="155" cy="40" rx="10" ry="6" />
+      {/* Airplane - White (#e8e8e8) */}
+      <g fill="#e8e8e8">
+        {/* Fuselage (body) */}
+        <ellipse cx="600" cy="150" rx="45" ry="20" />
 
         {/* Wings */}
-        <rect x="130" y="37" width="50" height="5" rx="2" />
+        <rect x="480" y="140" width="240" height="20" rx="10" />
 
-        {/* Tail fin */}
-        <polygon points="163,35 172,28 172,42" />
+        {/* Tail/Fin */}
+        <path d="M 630 160 L 680 130 L 670 180 Z" />
+
+        {/* Cockpit */}
+        <circle cx="620" cy="145" r="8" opacity="0.6" />
+      </g>
+
+      {/* Additional airplane detail - darker shading */}
+      <g fill="none" stroke="#c0c0c0" strokeWidth="3" opacity="0.5">
+        <path d="M 520 155 Q 560 145 600 140" />
       </g>
     </svg>
   )
