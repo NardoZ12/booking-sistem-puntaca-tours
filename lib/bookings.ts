@@ -42,6 +42,8 @@ export interface Booking {
   meetingPoint?: string
   time?: string
   guests?: number | string
+  adults?: number
+  children?: number
   confirmation?: string
   amount?: string
   language?: string
@@ -73,15 +75,22 @@ export function parseViatorBooking(text: string): Partial<Booking> {
   const childrenMatch = text.match(/(\d+)\s+(?:niño|child|menores?|infants?|jóvenes?|young people)/i)
 
   let totalGuests = 0
+  let adultsCount = 0
+  let childrenCount = 0
+
   if (adultsMatch) {
-    totalGuests += parseInt(adultsMatch[1])
+    adultsCount = parseInt(adultsMatch[1])
+    totalGuests += adultsCount
   }
   if (childrenMatch) {
-    totalGuests += parseInt(childrenMatch[1])
+    childrenCount = parseInt(childrenMatch[1])
+    totalGuests += childrenCount
   }
 
   if (totalGuests > 0) {
     data.guests = totalGuests
+    data.adults = adultsCount > 0 ? adultsCount : undefined
+    data.children = childrenCount > 0 ? childrenCount : undefined
   }
 
   const nameMatch = text.match(/Viajero principal:\s*(.+?)(?:\n|$)/i)
@@ -148,6 +157,8 @@ export function parseGYGBooking(text: string): Partial<Booking> {
   const childrenMatch = text.match(/(\d+)\s+(?:niño|child|children|niños|jóvenes?|young people)\s*\(/i)
 
   let totalGuests = 0
+  let adultsCount = 0
+  let childrenCount = 0
 
   if (participantsMatchES) {
     totalGuests = parseInt(participantsMatchES[1])
@@ -156,15 +167,19 @@ export function parseGYGBooking(text: string): Partial<Booking> {
   } else {
     // Count adults and children separately
     if (adultsMatch) {
-      totalGuests += parseInt(adultsMatch[1])
+      adultsCount = parseInt(adultsMatch[1])
+      totalGuests += adultsCount
     }
     if (childrenMatch) {
-      totalGuests += parseInt(childrenMatch[1])
+      childrenCount = parseInt(childrenMatch[1])
+      totalGuests += childrenCount
     }
   }
 
   if (totalGuests > 0) {
     data.guests = totalGuests
+    data.adults = adultsCount > 0 ? adultsCount : undefined
+    data.children = childrenCount > 0 ? childrenCount : undefined
   }
 
   // Pickup time - Spanish or English
@@ -238,10 +253,18 @@ export function parseGYGBooking(text: string): Partial<Booking> {
 }
 
 export function generateDriverMessage(b: Booking): string {
-  return `🏨 Hotel: ${b.hotel || "___"}
+  let passengerInfo = `${b.guests || "?"} people`
+  if (b.adults || b.children) {
+    const adults = b.adults ? `${b.adults} adults` : ""
+    const children = b.children ? `${b.children} children` : ""
+    passengerInfo = [adults, children].filter(Boolean).join(", ")
+  }
+
+  return `📅 Date: ${b.date || "___"}
+🏨 Hotel: ${b.hotel || "___"}
 📍 Meeting point: ${b.meetingPoint || "Lobby"}
 🕖 Pick-up time: ${b.time || "___"}
-👤 Client: ${b.clientName || "___"} (${b.guests || "?"} people)
+👤 Client: ${b.clientName || "___"} (${passengerInfo})
 📞 Phone: ${b.phone || "___"}`
 }
 
