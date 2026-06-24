@@ -68,8 +68,21 @@ export function parseViatorBooking(text: string): Partial<Booking> {
   const timeMatch = text.match(/(\d{1,2}:\d{2}(?:\s*(?:AM|PM))?)/i)
   if (timeMatch) data.time = timeMatch[1].trim()
 
-  const guestMatch = text.match(/(\d+)\s+adult(?:os?|s?)/i)
-  if (guestMatch) data.guests = parseInt(guestMatch[1])
+  // Count adults and children separately
+  const adultsMatch = text.match(/(\d+)\s+adult(?:os?|s?)/i)
+  const childrenMatch = text.match(/(\d+)\s+(?:niño|child|menores?|infants?)\s*(?:os?|s)?/i)
+
+  let totalGuests = 0
+  if (adultsMatch) {
+    totalGuests += parseInt(adultsMatch[1])
+  }
+  if (childrenMatch) {
+    totalGuests += parseInt(childrenMatch[1])
+  }
+
+  if (totalGuests > 0) {
+    data.guests = totalGuests
+  }
 
   const nameMatch = text.match(/Viajero principal:\s*(.+?)(?:\n|$)/i)
   if (nameMatch) data.clientName = nameMatch[1].trim()
