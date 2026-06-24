@@ -70,7 +70,7 @@ export function parseViatorBooking(text: string): Partial<Booking> {
 
   // Count adults and children separately
   const adultsMatch = text.match(/(\d+)\s+adult(?:os?|s?)/i)
-  const childrenMatch = text.match(/(\d+)\s+(?:niño|child|menores?|infants?)\s*(?:os?|s)?/i)
+  const childrenMatch = text.match(/(\d+)\s+(?:niño|child|menores?|infants?|jóvenes?|young people)/i)
 
   let totalGuests = 0
   if (adultsMatch) {
@@ -145,7 +145,7 @@ export function parseGYGBooking(text: string): Partial<Booking> {
   const participantsMatchES = text.match(/(\d+)\s+participantes?/)
   const participantsMatchEN = text.match(/(\d+)\s+participants?/)
   const adultsMatch = text.match(/(\d+)\s+(?:adultos?|adults?)\s*\(/)
-  const childrenMatch = text.match(/(\d+)\s+(?:niño|child|children|niños)\s*\(/i)
+  const childrenMatch = text.match(/(\d+)\s+(?:niño|child|children|niños|jóvenes?|young people)\s*\(/i)
 
   let totalGuests = 0
 
