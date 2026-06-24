@@ -160,6 +160,15 @@ export default function PasteModal({ source, onClose, onAdd }: PasteModalProps) 
                           {ALL_TOURS.map((t) => <option key={t} value={t} />)}
                         </datalist>
                       </>
+                    ) : key === "guests" ? (
+                      <div className="text-sm px-3 py-2 rounded-lg bg-neutral-800 border border-neutral-600 text-white">
+                        {fields.guests}
+                        {fields.adults || fields.children ? (
+                          <span className="text-xs text-neutral-400 ml-2">
+                            ({[fields.adults && `${fields.adults} adults`, fields.children && `${fields.children} children`].filter(Boolean).join(", ")})
+                          </span>
+                        ) : null}
+                      </div>
                     ) : (
                       <input
                         value={String(fields[key] || "")}
