@@ -128,17 +128,30 @@ export function parseGYGBooking(text: string): Partial<Booking> {
     data.confirmation = codeMatch[1]
   }
 
-  // Participants/Travelers count
+  // Participants/Travelers count - Check for adults and children separately
   const participantsMatchES = text.match(/(\d+)\s+participantes?/)
   const participantsMatchEN = text.match(/(\d+)\s+participants?/)
   const adultsMatch = text.match(/(\d+)\s+(?:adultos?|adults?)\s*\(/)
+  const childrenMatch = text.match(/(\d+)\s+(?:niño|child|children|niños)\s*\(/i)
+
+  let totalGuests = 0
 
   if (participantsMatchES) {
-    data.guests = parseInt(participantsMatchES[1])
+    totalGuests = parseInt(participantsMatchES[1])
   } else if (participantsMatchEN) {
-    data.guests = parseInt(participantsMatchEN[1])
-  } else if (adultsMatch) {
-    data.guests = parseInt(adultsMatch[1])
+    totalGuests = parseInt(participantsMatchEN[1])
+  } else {
+    // Count adults and children separately
+    if (adultsMatch) {
+      totalGuests += parseInt(adultsMatch[1])
+    }
+    if (childrenMatch) {
+      totalGuests += parseInt(childrenMatch[1])
+    }
+  }
+
+  if (totalGuests > 0) {
+    data.guests = totalGuests
   }
 
   // Pickup time - Spanish or English
