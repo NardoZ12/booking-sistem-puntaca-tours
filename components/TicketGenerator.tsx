@@ -1,7 +1,6 @@
 "use client"
 
 import { forwardRef } from "react"
-import { QRCodeSVG } from "qrcode.react"
 import type { Booking } from "@/lib/bookings"
 import { PuntacaLogo } from "./PuntacaLogo"
 
@@ -11,14 +10,6 @@ interface TicketGeneratorProps {
 
 export const TicketGenerator = forwardRef<HTMLDivElement, TicketGeneratorProps>(
   ({ booking }, ref) => {
-    const qrValue = JSON.stringify({
-      id: booking.id,
-      confirmation: booking.confirmation,
-      tour: booking.tour,
-      date: booking.date,
-      time: booking.time,
-    })
-
     return (
       <div
         ref={ref}
@@ -41,22 +32,6 @@ export const TicketGenerator = forwardRef<HTMLDivElement, TicketGeneratorProps>(
             <h1 className="text-2xl font-bold mb-1">PUNTACA TOURS</h1>
             <p className="text-orange-100 text-sm">Sistema de Reservas</p>
             <div className="border-b-2 border-white/30 my-3"></div>
-          </div>
-
-          {/* QR Code */}
-          <div className="flex justify-center mb-4">
-            <div
-              className="bg-white p-3 rounded-lg shadow-lg"
-              style={{
-                width: "160px",
-                height: "160px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <QRCodeSVG value={qrValue} size={140} level="H" includeMargin={false} />
-            </div>
           </div>
 
           {/* Confirmation Number */}
@@ -113,42 +88,6 @@ export const TicketGenerator = forwardRef<HTMLDivElement, TicketGeneratorProps>(
             <div>
               <p className="text-orange-100 text-xs font-semibold mb-1">📍 PUNTO DE ENCUENTRO</p>
               <p className="text-sm font-semibold text-white">{booking.meetingPoint || "Lobby"}</p>
-            </div>
-          </div>
-
-          {/* Additional Info */}
-          <div className="bg-white/10 backdrop-blur rounded-lg p-6 mt-4">
-            <div className="grid grid-cols-1 gap-4 text-sm">
-              {booking.amount && (
-                <div>
-                  <p className="text-orange-100 font-semibold mb-1">💰 MONTO</p>
-                  <p className="text-white font-semibold">{booking.amount}</p>
-                </div>
-              )}
-              {booking.source && (
-                <div>
-                  <p className="text-orange-100 font-semibold mb-1">📌 FUENTE</p>
-                  <p className="text-white font-semibold uppercase">
-                    {booking.source === "viator"
-                      ? "Viator"
-                      : booking.source === "gyg"
-                        ? "GetYourGuide"
-                        : "Venta Directa"}
-                  </p>
-                </div>
-              )}
-              {booking.language && (
-                <div>
-                  <p className="text-orange-100 font-semibold mb-1">🗣️ IDIOMA</p>
-                  <p className="text-white font-semibold">{booking.language}</p>
-                </div>
-              )}
-              {booking.commission && (
-                <div>
-                  <p className="text-orange-100 font-semibold mb-1">📊 COMISIÓN</p>
-                  <p className="text-white font-semibold">{booking.commission}</p>
-                </div>
-              )}
             </div>
           </div>
 
