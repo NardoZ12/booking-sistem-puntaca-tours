@@ -150,9 +150,7 @@ export function parseGYGBooking(text: string): Partial<Booking> {
     data.confirmation = codeMatch[1]
   }
 
-  // Participants/Travelers count - Check for adults and children separately
-  const participantsMatchES = text.match(/(\d+)\s+participantes?/)
-  const participantsMatchEN = text.match(/(\d+)\s+participants?/)
+  // Participants/Travelers count - Always try to get adults and children breakdown first
   const adultsMatch = text.match(/(\d+)\s+(?:adultos?|adults?)\s*\(/)
   const childrenMatch = text.match(/(\d+)\s+(?:niño|child|children|niños|jóvenes?|young people)\s*\(/i)
 
@@ -160,12 +158,8 @@ export function parseGYGBooking(text: string): Partial<Booking> {
   let adultsCount = 0
   let childrenCount = 0
 
-  if (participantsMatchES) {
-    totalGuests = parseInt(participantsMatchES[1])
-  } else if (participantsMatchEN) {
-    totalGuests = parseInt(participantsMatchEN[1])
-  } else {
-    // Count adults and children separately
+  // First priority: look for specific adult/child breakdown
+  if (adultsMatch || childrenMatch) {
     if (adultsMatch) {
       adultsCount = parseInt(adultsMatch[1])
       totalGuests += adultsCount
@@ -173,6 +167,16 @@ export function parseGYGBooking(text: string): Partial<Booking> {
     if (childrenMatch) {
       childrenCount = parseInt(childrenMatch[1])
       totalGuests += childrenCount
+    }
+  } else {
+    // Fallback: use total participants count if no breakdown found
+    const participantsMatchES = text.match(/(\d+)\s+participantes?/)
+    const participantsMatchEN = text.match(/(\d+)\s+participants?/)
+
+    if (participantsMatchES) {
+      totalGuests = parseInt(participantsMatchES[1])
+    } else if (participantsMatchEN) {
+      totalGuests = parseInt(participantsMatchEN[1])
     }
   }
 
