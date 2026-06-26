@@ -15,6 +15,7 @@ export function useBookings() {
       setLoading(true)
 
       if (supabase) {
+        console.log("Loading from Supabase...")
         // Try Supabase first
         const { data, error: err } = await supabase
           .from("bookings")
@@ -22,16 +23,20 @@ export function useBookings() {
           .order("createdAt", { ascending: false })
 
         if (err) {
-          console.warn("Supabase error, falling back to localStorage:", err)
+          console.warn("Supabase error:", err)
+          console.log("Falling back to localStorage")
           loadFromLocalStorage()
           return
         }
 
         if (data) {
+          console.log("Loaded from Supabase:", data.length, "bookings")
           setBookings((data as Booking[]) || [])
           setError(null)
           return
         }
+      } else {
+        console.log("Supabase not configured")
       }
 
       loadFromLocalStorage()
@@ -72,14 +77,21 @@ export function useBookings() {
   const addBooking = async (booking: Booking) => {
     try {
       if (supabase) {
-        const { error: err } = await supabase.from("bookings").insert([booking])
-        if (!err) {
+        console.log("Adding booking to Supabase:", booking.id)
+        const { error: err, data } = await supabase.from("bookings").insert([booking])
+        if (err) {
+          console.error("Supabase insert error:", err)
+        } else {
+          console.log("Booking added to Supabase successfully")
           await loadBookings()
           return true
         }
+      } else {
+        console.log("Supabase not configured, using localStorage")
       }
 
       // Fallback to localStorage
+      console.log("Saving to localStorage")
       const newBookings = [booking, ...bookings]
       setBookings(newBookings)
       saveToLocalStorage(newBookings)
