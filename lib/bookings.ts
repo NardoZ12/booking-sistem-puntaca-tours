@@ -58,8 +58,19 @@ export interface Booking {
 export function parseViatorBooking(text: string): Partial<Booking> {
   const data: Partial<Booking> = {}
 
-  const dateMatch = text.match(/(\w{3},?\s+\d{1,2}\s+\w{3}\s+\d{4}|lun,\s*\d+\s+\w+\s+\d{4})/i)
-  if (dateMatch) data.date = dateMatch[1].trim()
+  // Enhanced date parsing - multiple formats
+  const datePatterns = [
+    /(\w{3},?\s+\d{1,2}\s+\w{3}\s+\d{4})/i, // Mon, 15 Jun 2026
+    /(\d{1,2}\s+\w+\s+\d{4})/i, // 15 June 2026
+    /(lun,?\s*\d+\s+\w+\s+\d{4})/i, // lun, 15 junio 2026
+  ]
+  for (const pattern of datePatterns) {
+    const match = text.match(pattern)
+    if (match) {
+      data.date = match[1].trim()
+      break
+    }
+  }
 
   const lines = text.split("\n").map((l) => l.trim()).filter(Boolean)
   const confirmIdx = lines.findIndex((l) => /Confirmada|Confirmed/i.test(l))
@@ -99,11 +110,30 @@ export function parseViatorBooking(text: string): Partial<Booking> {
   const confirmMatch = text.match(/BR-(\d+)/i)
   if (confirmMatch) data.confirmation = `BR-${confirmMatch[1]}`
 
-  const hotelMatch = text.match(/Punto de recogida:\s*(.+?)(?:,|\n|Punta Cana)/i)
-  if (hotelMatch) data.hotel = hotelMatch[1].trim()
+  // Enhanced hotel parsing - multiple patterns
+  const hotelPatterns = [
+    /Punto de recogida:\s*(.+?)(?:\n|$)/i,
+    /Hotel:\s*(.+?)(?:\n|$)/i,
+    /Alojamiento:\s*(.+?)(?:\n|$)/i,
+    /Accommodation:\s*(.+?)(?:\n|$)/i,
+    /Pickup:\s*(.+?)(?:\n|$)/i,
+  ]
+  for (const pattern of hotelPatterns) {
+    const match = text.match(pattern)
+    if (match) {
+      let hotelName = match[1].trim()
+      // Remove common suffixes
+      hotelName = hotelName.replace(/,?\s*Punta Cana.*$/i, "").trim()
+      hotelName = hotelName.replace(/,?\s*Dominican Republic.*$/i, "").trim()
+      if (hotelName && hotelName.length > 2) {
+        data.hotel = hotelName
+        break
+      }
+    }
+  }
 
-  const phoneMatch = text.match(/\+\d[\d\s\-]+(?:Show)?/)
-  if (phoneMatch) data.phone = phoneMatch[0].replace("Show", "").trim()
+  const phoneMatch = text.match(/\+\d[\d\s\-\(\)]+/)
+  if (phoneMatch) data.phone = phoneMatch[0].trim()
 
   const amountMatch = text.match(/Importe que recibirá:\s*([\d,.]+ USD)/i)
   if (amountMatch) data.amount = amountMatch[1]
@@ -135,6 +165,7 @@ export function parseGYGBooking(text: string): Partial<Booking> {
   const dateMatchES = text.match(/(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})/)
   const dateMatchEN = text.match(/(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2},?\s+\d{4}/)
   const dateMatchENShort = text.match(/(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}/)
+  const dateMatchSimple = text.match(/\b(\d{1,2})\s+(\w+)\s+(\d{4})\b/)
 
   if (dateMatchES) {
     data.date = `${dateMatchES[1]} de ${dateMatchES[2]} de ${dateMatchES[3]}`
@@ -142,6 +173,8 @@ export function parseGYGBooking(text: string): Partial<Booking> {
     data.date = dateMatchEN[0]
   } else if (dateMatchENShort) {
     data.date = dateMatchENShort[0]
+  } else if (dateMatchSimple) {
+    data.date = `${dateMatchSimple[1]} ${dateMatchSimple[2]} ${dateMatchSimple[3]}`
   }
 
   // Confirmation code - Alphanumeric string in brackets or standalone
@@ -217,14 +250,25 @@ export function parseGYGBooking(text: string): Partial<Booking> {
     data.phone = phoneMatch[0].trim()
   }
 
-  // Hotel/Location - Spanish or English
-  const locationMatchES = text.match(/Ubicación\s*\n\s*([^\n]+)/)
-  const locationMatchEN = text.match(/Location\s*\n\s*([^\n]+)/)
+  // Hotel/Location - Spanish or English (multiple patterns)
+  const locationPatterns = [
+    /Ubicación\s*\n\s*([^\n]+)/i,
+    /Location\s*\n\s*([^\n]+)/i,
+    /Hotel\s*\n\s*([^\n]+)/i,
+    /Accommodation\s*\n\s*([^\n]+)/i,
+    /Alojamiento\s*\n\s*([^\n]+)/i,
+    /Pickup location\s*\n\s*([^\n]+)/i,
+  ]
 
-  if (locationMatchES) {
-    data.hotel = locationMatchES[1].trim()
-  } else if (locationMatchEN) {
-    data.hotel = locationMatchEN[1].trim()
+  for (const pattern of locationPatterns) {
+    const match = text.match(pattern)
+    if (match) {
+      const location = match[1].trim()
+      if (location && location.length > 2) {
+        data.hotel = location
+        break
+      }
+    }
   }
 
   // Amount/Price

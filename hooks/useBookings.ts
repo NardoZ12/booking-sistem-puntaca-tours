@@ -9,40 +9,36 @@ export function useBookings() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Load bookings from Supabase or localStorage
+  // Load bookings from Supabase
   const loadBookings = async () => {
+    if (!supabase) {
+      console.log("Supabase not configured")
+      loadFromLocalStorage()
+      return
+    }
+
     try {
       setLoading(true)
+      console.log("Loading bookings from Supabase...")
+      const { data, error: err } = await supabase
+        .from("bookings")
+        .select("*")
+        .order("createdAt", { ascending: false })
 
-      if (supabase) {
-        console.log("Loading from Supabase...")
-        // Try Supabase first
-        const { data, error: err } = await supabase
-          .from("bookings")
-          .select("*")
-          .order("createdAt", { ascending: false })
-
-        if (err) {
-          console.warn("Supabase error:", err)
-          console.log("Falling back to localStorage")
-          loadFromLocalStorage()
-          return
-        }
-
-        if (data) {
-          console.log("Loaded from Supabase:", data.length, "bookings")
-          setBookings((data as Booking[]) || [])
-          setError(null)
-          return
-        }
-      } else {
-        console.log("Supabase not configured")
+      if (err) {
+        console.error("Supabase load error:", err)
+        setError(err.message)
+        return false
       }
 
-      loadFromLocalStorage()
+      console.log("Loaded from Supabase:", data?.length || 0, "bookings")
+      setBookings((data as Booking[]) || [])
+      setError(null)
+      return true
     } catch (err) {
-      console.warn("Error loading from Supabase, falling back to localStorage:", err)
-      loadFromLocalStorage()
+      console.error("Error loading from Supabase:", err)
+      setError(err instanceof Error ? err.message : "Unknown error")
+      return false
     } finally {
       setLoading(false)
     }
@@ -73,88 +69,126 @@ export function useBookings() {
     }
   }
 
-  // Add booking
+  // Add booking to Supabase
   const addBooking = async (booking: Booking) => {
-    try {
-      if (supabase) {
-        console.log("Adding booking to Supabase:", booking.id)
-        const { error: err, data } = await supabase.from("bookings").insert([booking])
-        if (err) {
-          console.error("Supabase insert error:", err)
-        } else {
-          console.log("Booking added to Supabase successfully")
-          await loadBookings()
-          return true
-        }
-      } else {
-        console.log("Supabase not configured, using localStorage")
-      }
-
-      // Fallback to localStorage
-      console.log("Saving to localStorage")
+    if (!supabase) {
+      console.log("Supabase not configured, saving to localStorage")
       const newBookings = [booking, ...bookings]
       setBookings(newBookings)
       saveToLocalStorage(newBookings)
       return true
+    }
+
+    try {
+      console.log("Adding booking to Supabase:", booking.id)
+      const { error: err } = await supabase.from("bookings").insert([booking])
+      if (err) {
+        console.error("Supabase insert error:", err)
+        setError(err.message)
+        return false
+      }
+
+      console.log("Booking added to Supabase successfully")
+      await loadBookings()
+      return true
     } catch (err) {
-      console.error("Error:", err)
+      console.error("Error adding booking:", err)
       setError(err instanceof Error ? err.message : "Unknown error")
       return false
     }
   }
 
-  // Update booking
+  // Update booking in Supabase
   const updateBooking = async (booking: Booking) => {
-    try {
-      if (supabase) {
-        const { error: err } = await supabase
-          .from("bookings")
-          .update(booking)
-          .eq("id", booking.id)
-        if (!err) {
-          await loadBookings()
-          return true
-        }
-      }
-
-      // Fallback to localStorage
+    if (!supabase) {
+      console.log("Supabase not configured, updating localStorage")
       const newBookings = bookings.map((b) => (b.id === booking.id ? booking : b))
       setBookings(newBookings)
       saveToLocalStorage(newBookings)
       return true
+    }
+
+    try {
+      console.log("Updating booking in Supabase:", booking.id)
+      const { error: err } = await supabase
+        .from("bookings")
+        .update(booking)
+        .eq("id", booking.id)
+
+      if (err) {
+        console.error("Supabase update error:", err)
+        setError(err.message)
+        return false
+      }
+
+      console.log("Booking updated successfully")
+      await loadBookings()
+      return true
     } catch (err) {
-      console.error("Error:", err)
+      console.error("Error updating booking:", err)
       setError(err instanceof Error ? err.message : "Unknown error")
       return false
     }
   }
 
-  // Delete booking
+  // Delete booking from Supabase
   const deleteBooking = async (id: number) => {
-    try {
-      if (supabase) {
-        const { error: err } = await supabase.from("bookings").delete().eq("id", id)
-        if (!err) {
-          await loadBookings()
-          return true
-        }
-      }
-
-      // Fallback to localStorage
+    if (!supabase) {
+      console.log("Supabase not configured, deleting from localStorage")
       const newBookings = bookings.filter((b) => b.id !== id)
       setBookings(newBookings)
       saveToLocalStorage(newBookings)
       return true
+    }
+
+    try {
+      console.log("Deleting booking from Supabase:", id)
+      const { error: err } = await supabase.from("bookings").delete().eq("id", id)
+
+      if (err) {
+        console.error("Supabase delete error:", err)
+        setError(err.message)
+        return false
+      }
+
+      console.log("Booking deleted successfully")
+      await loadBookings()
+      return true
     } catch (err) {
-      console.error("Error:", err)
+      console.error("Error deleting booking:", err)
       setError(err instanceof Error ? err.message : "Unknown error")
       return false
     }
   }
 
-  // Load bookings on mount
+  // Set up real-time subscription and initial load
   useEffect(() => {
     loadBookings()
+
+    // Set up real-time subscription if Supabase is configured
+    if (!supabase) return
+
+    console.log("Setting up real-time subscription...")
+    const subscription = supabase
+      .channel("bookings-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "bookings",
+        },
+        (payload) => {
+          console.log("Real-time update received:", payload.eventType)
+          loadBookings()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      console.log("Unsubscribing from real-time updates")
+      subscription.unsubscribe()
+    }
   }, [])
 
   return {
