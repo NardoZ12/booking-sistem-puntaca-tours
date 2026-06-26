@@ -6,21 +6,15 @@ import ViatorPage from "./viator/page"
 import GYGPage from "./getyourguide/page"
 import VentaDirectaPage from "./venta-directa/page"
 import HistorialPage from "./historial/page"
-import { SAMPLE_BOOKINGS, type Booking } from "@/lib/bookings"
 import { useAuth } from "@/hooks/useAuth"
+import { useBookings } from "@/hooks/useBookings"
 import { PuntacaLogo } from "@/components/PuntacaLogo"
 
 export default function PuntacaToursDashboard() {
   const { operator, loading, logout } = useAuth()
   const [activeSection, setActiveSection] = useState("overview")
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [bookings, setBookings] = useState<Booking[]>(SAMPLE_BOOKINGS)
-
-  const addBooking = (b: Booking) => setBookings((prev) => [b, ...prev])
-  const updateBooking = (updated: Booking) =>
-    setBookings((prev) => prev.map((b) => (b.id === updated.id ? updated : b)))
-  const deleteBooking = (id: number) =>
-    setBookings((prev) => prev.filter((b) => b.id !== id))
+  const { bookings, addBooking, updateBooking, deleteBooking } = useBookings()
 
   if (loading) {
     return (
