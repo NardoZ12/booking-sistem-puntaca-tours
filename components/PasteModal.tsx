@@ -57,7 +57,7 @@ export default function PasteModal({ source, onClose, onAdd }: PasteModalProps) 
   ]
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" translate="no">
       <div className="bg-neutral-900 border border-neutral-700 rounded-xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
         {/* Modal header */}
         <div className="flex items-center justify-between p-5 border-b border-neutral-700">
@@ -88,6 +88,7 @@ export default function PasteModal({ source, onClose, onAdd }: PasteModalProps) 
                 onChange={(e) => setText(e.target.value)}
                 placeholder={`Pegar texto de reserva de ${cfg.label}…`}
                 className="w-full min-h-48 p-3 text-sm rounded-lg bg-neutral-800 border border-neutral-600 text-white font-mono leading-relaxed resize-y outline-none focus:border-orange-500 placeholder-neutral-600"
+                translate="no"
               />
               <div className="flex gap-3 mt-4">
                 <button
