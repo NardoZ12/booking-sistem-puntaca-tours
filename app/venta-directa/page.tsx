@@ -134,7 +134,7 @@ export default function VentaDirectaPage({ bookings = [], onAdd = () => {}, onUp
   )
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
       {showForm && <DirectForm onAdd={onAdd} onClose={() => setShowForm(false)} />}
 
       <div className="flex items-center justify-between mb-6">

@@ -44,7 +44,7 @@ export default function HistorialPage({ bookings = [], onUpdate = () => {}, onDe
   const directCount = bookings.filter((b) => b.source === "direct").length
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
       <div className="mb-6">
         <h1 className="text-xl font-bold text-white tracking-wider">HISTORIAL DE RESERVAS</h1>
         <p className="text-sm text-neutral-400 mt-0.5">

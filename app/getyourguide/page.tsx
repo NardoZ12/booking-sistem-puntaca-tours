@@ -26,7 +26,7 @@ export default function GYGPage({ bookings = [], onAdd = () => {}, onUpdate = ()
   )
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
       {modal && (
         <PasteModal source="gyg" onClose={() => setModal(false)} onAdd={onAdd} />
       )}

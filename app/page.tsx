@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronRight, Bell, RefreshCw, LogOut } from "lucide-react"
+import { ChevronRight, Bell, RefreshCw, LogOut, Menu, X } from "lucide-react"
 import ViatorPage from "./viator/page"
 import GYGPage from "./getyourguide/page"
 import VentaDirectaPage from "./venta-directa/page"
@@ -14,6 +14,7 @@ export default function PuntacaToursDashboard() {
   const { operator, loading, logout } = useAuth()
   const [activeSection, setActiveSection] = useState("overview")
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const { bookings, addBooking, updateBooking, deleteBooking } = useBookings()
 
   if (loading) {
@@ -45,11 +46,24 @@ export default function PuntacaToursDashboard() {
 
   const recentBookings = [...bookings].sort((a, b) => (b.id || 0) - (a.id || 0)).slice(0, 5)
 
+  const selectSection = (id: string) => {
+    setActiveSection(id)
+    setMobileOpen(false)
+  }
+
   return (
     <div className="flex h-screen">
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-40 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <div
-        className={`${sidebarCollapsed ? "w-16" : "w-72"} bg-neutral-900 border-r border-neutral-700 transition-all duration-300 fixed md:relative z-50 md:z-auto h-full`}
+        className={`bg-neutral-900 border-r border-neutral-700 transition-transform duration-300 fixed md:relative z-50 h-full w-72 ${sidebarCollapsed ? "md:w-16" : "md:w-72"} ${mobileOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
       >
         <div className="p-4">
           {/* Logo */}
@@ -64,15 +78,21 @@ export default function PuntacaToursDashboard() {
               </div>
             )}
             {sidebarCollapsed && <PuntacaLogo size={40} />}
+            {/* Desktop collapse toggle */}
             <button
-              variant="ghost"
-              size="icon"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="text-neutral-400 hover:text-orange-500 bg-transparent border-0 cursor-pointer p-1"
+              className="hidden md:block text-neutral-400 hover:text-orange-500 bg-transparent border-0 cursor-pointer p-1"
             >
               <ChevronRight
                 className={`w-5 h-5 transition-transform ${sidebarCollapsed ? "" : "rotate-180"}`}
               />
+            </button>
+            {/* Mobile close toggle */}
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="md:hidden text-neutral-400 hover:text-orange-500 bg-transparent border-0 cursor-pointer p-1"
+            >
+              <X className="w-5 h-5" />
             </button>
           </div>
 
@@ -81,7 +101,7 @@ export default function PuntacaToursDashboard() {
             {navItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => setActiveSection(item.id)}
+                onClick={() => selectSection(item.id)}
                 className={`w-full flex items-center gap-3 p-3 rounded transition-colors text-left ${
                   activeSection === item.id
                     ? "bg-orange-500 text-white"
@@ -115,19 +135,29 @@ export default function PuntacaToursDashboard() {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Topbar */}
-        <div className="h-16 bg-neutral-800 border-b border-neutral-700 flex items-center justify-between px-6 flex-shrink-0">
-          <div className="text-sm text-neutral-400 tracking-wider">
-            PUNTACA TOURS /{" "}
-            <span className="text-orange-500">
-              {navItems.find((n) => n.id === activeSection)?.label || "OVERVIEW"}
-            </span>
+        <div className="h-16 bg-neutral-800 border-b border-neutral-700 flex items-center justify-between px-4 md:px-6 flex-shrink-0 gap-2">
+          <div className="flex items-center gap-3 min-w-0">
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="md:hidden text-neutral-400 hover:text-orange-500 bg-transparent border-0 cursor-pointer p-1 flex-shrink-0"
+              title="Abrir menú"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <div className="text-xs md:text-sm text-neutral-400 tracking-wider truncate">
+              <span className="hidden sm:inline">PUNTACA TOURS /{" "}</span>
+              <span className="text-orange-500">
+                {navItems.find((n) => n.id === activeSection)?.label || "OVERVIEW"}
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-xs text-neutral-500">{todayStr.toUpperCase()}</div>
-            <div className="flex items-center gap-2 text-xs text-neutral-400 border-l border-neutral-700 pl-4">
-              <span>{operator?.name}</span>
+          <div className="flex items-center gap-3 md:gap-4 flex-shrink-0">
+            <div className="hidden md:block text-xs text-neutral-500">{todayStr.toUpperCase()}</div>
+            <div className="hidden sm:flex items-center gap-2 text-xs text-neutral-400 md:border-l border-neutral-700 md:pl-4">
+              <span className="truncate max-w-[120px]">{operator?.name}</span>
             </div>
             <button className="text-neutral-400 hover:text-orange-500 bg-transparent border-0 cursor-pointer">
               <Bell className="w-4 h-4" />
