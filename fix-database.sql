@@ -1,7 +1,16 @@
--- Create bookings table
--- IMPORTANT: column names are quoted to preserve camelCase. Without
--- quotes Postgres lowercases them and inserts/selects from the app
--- (which uses clientName, meetingPoint, createdAt, ...) would fail.
+-- ============================================================
+-- FIX: Recreate bookings table with QUOTED camelCase columns
+-- so they match exactly the keys sent by the app (clientName,
+-- meetingPoint, productCode, rawText, createdAt, ...).
+--
+-- Without quotes, Postgres lowercases column names and the
+-- inserts/selects from the app fail ("column not found").
+-- ============================================================
+
+-- Drop the old (broken) table. Prior inserts were failing, so
+-- there is no valid data to preserve here.
+DROP TABLE IF EXISTS bookings CASCADE;
+
 CREATE TABLE bookings (
   "id" BIGINT PRIMARY KEY,
   "source" TEXT NOT NULL CHECK ("source" IN ('viator', 'gyg', 'direct')),
@@ -27,11 +36,10 @@ CREATE TABLE bookings (
   "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Enable RLS (Row Level Security)
+-- Row Level Security
 ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
 
--- Create policy to allow all operations (for public access)
--- In production, you should restrict this to authenticated users only
+DROP POLICY IF EXISTS "Allow all operations" ON bookings;
 CREATE POLICY "Allow all operations" ON bookings
   FOR ALL
   USING (true)
@@ -41,11 +49,11 @@ CREATE POLICY "Allow all operations" ON bookings
 GRANT ALL ON bookings TO anon;
 GRANT ALL ON bookings TO authenticated;
 
--- Create index on createdAt for faster queries
+-- Indexes (note the quoted column name)
 CREATE INDEX bookings_created_at_idx ON bookings ("createdAt" DESC);
-
--- Create index on source for filtering
 CREATE INDEX bookings_source_idx ON bookings ("source");
 
--- Enable real-time sync across browsers/devices
+-- Enable real-time sync across browsers/devices.
+-- Adds this table to the realtime publication so postgres_changes
+-- events are broadcast to all connected clients.
 ALTER PUBLICATION supabase_realtime ADD TABLE bookings;

@@ -7,7 +7,7 @@ import { type Booking, parseViatorBooking, parseGYGBooking, ALL_TOURS } from "@/
 interface PasteModalProps {
   source: "viator" | "gyg"
   onClose: () => void
-  onAdd: (b: Booking) => void
+  onAdd: (b: Booking) => void | boolean | Promise<void | boolean>
 }
 
 const CONFIG = {
@@ -19,6 +19,8 @@ export default function PasteModal({ source, onClose, onAdd }: PasteModalProps) 
   const [text, setText] = useState("")
   const [step, setStep] = useState<"paste" | "edit_details" | "review">("paste")
   const [fields, setFields] = useState<Partial<Booking>>({})
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState("")
   const cfg = CONFIG[source]
 
   const parse = () => {
@@ -28,15 +30,29 @@ export default function PasteModal({ source, onClose, onAdd }: PasteModalProps) 
     setStep("edit_details")
   }
 
-  const submit = () => {
-    onAdd({
-      ...(fields as Booking),
-      id: Date.now(),
-      source,
-      rawText: text,
-      createdAt: new Date().toISOString(),
-    })
-    onClose()
+  const submit = async () => {
+    setSaving(true)
+    setSaveError("")
+    try {
+      const result = await onAdd({
+        ...(fields as Booking),
+        id: Date.now(),
+        source,
+        rawText: text,
+        createdAt: new Date().toISOString(),
+      })
+      // If the handler explicitly returns false, the save failed.
+      if (result === false) {
+        setSaveError("No se pudo guardar la reserva en la base de datos. Revisa la conexión con Supabase e inténtalo de nuevo.")
+        setSaving(false)
+        return
+      }
+      onClose()
+    } catch (err) {
+      console.error("Error saving booking:", err)
+      setSaveError("Ocurrió un error al guardar la reserva. Inténtalo de nuevo.")
+      setSaving(false)
+    }
   }
 
   const editFields: [string, keyof Booking][] = [
@@ -180,17 +196,24 @@ export default function PasteModal({ source, onClose, onAdd }: PasteModalProps) 
                   </div>
                 ))}
               </div>
+              {saveError && (
+                <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-sm text-red-400 mb-3">
+                  {saveError}
+                </div>
+              )}
               <div className="flex gap-3">
                 <button
                   onClick={submit}
-                  className="flex-1 py-2.5 text-sm rounded-lg cursor-pointer font-medium tracking-wider"
+                  disabled={saving}
+                  className="flex-1 py-2.5 text-sm rounded-lg cursor-pointer font-medium tracking-wider transition-colors disabled:opacity-50"
                   style={{ background: cfg.color, color: "#fff", border: "none" }}
                 >
-                  GUARDAR RESERVA
+                  {saving ? "GUARDANDO..." : "GUARDAR RESERVA"}
                 </button>
                 <button
                   onClick={() => setStep("edit_details")}
-                  className="px-4 py-2.5 text-sm rounded-lg bg-transparent border border-neutral-600 text-neutral-400 cursor-pointer hover:border-neutral-400"
+                  disabled={saving}
+                  className="px-4 py-2.5 text-sm rounded-lg bg-transparent border border-neutral-600 text-neutral-400 cursor-pointer hover:border-neutral-400 disabled:opacity-50"
                 >
                   Atrás
                 </button>
