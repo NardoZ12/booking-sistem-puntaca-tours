@@ -308,12 +308,25 @@ export function generateDriverMessage(b: Booking): string {
     passengerInfo = [adults, children].filter(Boolean).join(", ")
   }
 
-  return `📅 Date: ${b.date || "___"}
-🏨 Hotel: ${b.hotel || "___"}
-📍 Meeting point: ${b.meetingPoint || "Lobby"}
-🕖 Pick-up time: ${b.time || "___"}
-👤 Client: ${b.clientName || "___"} (${passengerInfo})
-📞 Phone: ${b.phone || "___"}`
+  const tourTitle = (b.tour || "TOUR").toUpperCase()
+
+  const lines = [
+    `*${tourTitle}*`,
+    `📅 Date: ${b.date || "___"}`,
+    `🏨 Hotel: ${b.hotel || "___"}`,
+    `📍 Meeting point: ${b.meetingPoint || "Lobby"}`,
+    `🕖 Pick-up time: ${b.time || "___"}`,
+    `👤 Client: ${b.clientName || "___"} (${passengerInfo})`,
+    `📞 Phone: ${b.phone || "___"}`,
+  ]
+
+  if (b.confirmation) {
+    lines.push(`🎟️ ${b.confirmation}`)
+  }
+
+  lines.push(`*PUNTACA TOURS*`)
+
+  return lines.join("\n")
 }
 
 export function generateClientMessage(b: Booking): string {
