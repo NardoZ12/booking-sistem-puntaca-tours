@@ -184,8 +184,8 @@ export function parseGYGBooking(text: string): Partial<Booking> {
   }
 
   // Participants/Travelers count - Always try to get adults and children breakdown first
-  const adultsMatch = text.match(/(\d+)\s+(?:adultos?|adults?)\s*\(/)
-  const childrenMatch = text.match(/(\d+)\s+(?:niño|child|children|niños|jóvenes?|young people)\s*\(/i)
+  const adultsMatch = text.match(/(\d+)\s+(?:adultos?|adults?)\s*\(/i)
+  const childrenMatch = text.match(/(\d+)\s+(?:niños?|child|children|jóvenes?|young people)\s*\(/i)
 
   let totalGuests = 0
   let adultsCount = 0
