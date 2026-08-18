@@ -6,9 +6,9 @@ import BookingCard from "@/components/BookingCard"
 import { type Booking } from "@/lib/bookings"
 
 interface Props {
-  bookings: Booking[]
-  onUpdate: (b: Booking) => void
-  onDelete: (id: number) => void
+  bookings?: Booking[]
+  onUpdate?: (b: Booking) => void
+  onDelete?: (id: number) => void
 }
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -22,7 +22,7 @@ const SOURCE_COLORS: Record<string, string> = {
   direct: "#8B5CF6",
 }
 
-export default function HistorialPage({ bookings, onUpdate, onDelete }: Props) {
+export default function HistorialPage({ bookings = [], onUpdate = () => {}, onDelete = () => {} }: Props) {
   const [search, setSearch] = useState("")
   const [sourceFilter, setSourceFilter] = useState<string>("all")
   const [dateFilter, setDateFilter] = useState("")
@@ -44,7 +44,7 @@ export default function HistorialPage({ bookings, onUpdate, onDelete }: Props) {
   const directCount = bookings.filter((b) => b.source === "direct").length
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
       <div className="mb-6">
         <h1 className="text-xl font-bold text-white tracking-wider">HISTORIAL DE RESERVAS</h1>
         <p className="text-sm text-neutral-400 mt-0.5">

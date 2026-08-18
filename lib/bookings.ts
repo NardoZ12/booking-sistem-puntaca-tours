@@ -42,6 +42,8 @@ export interface Booking {
   meetingPoint?: string
   time?: string
   guests?: number | string
+  adults?: number
+  children?: number
   confirmation?: string
   amount?: string
   language?: string
@@ -56,8 +58,19 @@ export interface Booking {
 export function parseViatorBooking(text: string): Partial<Booking> {
   const data: Partial<Booking> = {}
 
-  const dateMatch = text.match(/(\w{3},?\s+\d{1,2}\s+\w{3}\s+\d{4}|lun,\s*\d+\s+\w+\s+\d{4})/i)
-  if (dateMatch) data.date = dateMatch[1].trim()
+  // Enhanced date parsing - multiple formats
+  const datePatterns = [
+    /(\w{3},?\s+\d{1,2}\s+\w{3}\s+\d{4})/i, // Mon, 15 Jun 2026
+    /(\d{1,2}\s+\w+\s+\d{4})/i, // 15 June 2026
+    /(lun,?\s*\d+\s+\w+\s+\d{4})/i, // lun, 15 junio 2026
+  ]
+  for (const pattern of datePatterns) {
+    const match = text.match(pattern)
+    if (match) {
+      data.date = match[1].trim()
+      break
+    }
+  }
 
   const lines = text.split("\n").map((l) => l.trim()).filter(Boolean)
   const confirmIdx = lines.findIndex((l) => /Confirmada|Confirmed/i.test(l))
@@ -68,8 +81,28 @@ export function parseViatorBooking(text: string): Partial<Booking> {
   const timeMatch = text.match(/(\d{1,2}:\d{2}(?:\s*(?:AM|PM))?)/i)
   if (timeMatch) data.time = timeMatch[1].trim()
 
-  const guestMatch = text.match(/(\d+)\s+adult(?:os?|s?)/i)
-  if (guestMatch) data.guests = parseInt(guestMatch[1])
+  // Count adults and children separately
+  const adultsMatch = text.match(/(\d+)\s+adult(?:os?|s?)/i)
+  const childrenMatch = text.match(/(\d+)\s+(?:niño|child|menores?|infants?|jóvenes?|young people)/i)
+
+  let totalGuests = 0
+  let adultsCount = 0
+  let childrenCount = 0
+
+  if (adultsMatch) {
+    adultsCount = parseInt(adultsMatch[1])
+    totalGuests += adultsCount
+  }
+  if (childrenMatch) {
+    childrenCount = parseInt(childrenMatch[1])
+    totalGuests += childrenCount
+  }
+
+  if (totalGuests > 0) {
+    data.guests = totalGuests
+    data.adults = adultsCount > 0 ? adultsCount : undefined
+    data.children = childrenCount > 0 ? childrenCount : undefined
+  }
 
   const nameMatch = text.match(/Viajero principal:\s*(.+?)(?:\n|$)/i)
   if (nameMatch) data.clientName = nameMatch[1].trim()
@@ -77,11 +110,30 @@ export function parseViatorBooking(text: string): Partial<Booking> {
   const confirmMatch = text.match(/BR-(\d+)/i)
   if (confirmMatch) data.confirmation = `BR-${confirmMatch[1]}`
 
-  const hotelMatch = text.match(/Punto de recogida:\s*(.+?)(?:,|\n|Punta Cana)/i)
-  if (hotelMatch) data.hotel = hotelMatch[1].trim()
+  // Enhanced hotel parsing - multiple patterns
+  const hotelPatterns = [
+    /Punto de recogida:\s*(.+?)(?:\n|$)/i,
+    /Hotel:\s*(.+?)(?:\n|$)/i,
+    /Alojamiento:\s*(.+?)(?:\n|$)/i,
+    /Accommodation:\s*(.+?)(?:\n|$)/i,
+    /Pickup:\s*(.+?)(?:\n|$)/i,
+  ]
+  for (const pattern of hotelPatterns) {
+    const match = text.match(pattern)
+    if (match) {
+      let hotelName = match[1].trim()
+      // Remove common suffixes
+      hotelName = hotelName.replace(/,?\s*Punta Cana.*$/i, "").trim()
+      hotelName = hotelName.replace(/,?\s*Dominican Republic.*$/i, "").trim()
+      if (hotelName && hotelName.length > 2) {
+        data.hotel = hotelName
+        break
+      }
+    }
+  }
 
-  const phoneMatch = text.match(/\+\d[\d\s\-]+(?:Show)?/)
-  if (phoneMatch) data.phone = phoneMatch[0].replace("Show", "").trim()
+  const phoneMatch = text.match(/\+\d[\d\s\-\(\)]+/)
+  if (phoneMatch) data.phone = phoneMatch[0].trim()
 
   const amountMatch = text.match(/Importe que recibirá:\s*([\d,.]+ USD)/i)
   if (amountMatch) data.amount = amountMatch[1]
@@ -101,52 +153,180 @@ export function parseViatorBooking(text: string): Partial<Booking> {
 export function parseGYGBooking(text: string): Partial<Booking> {
   const data: Partial<Booking> = {}
 
-  const tourMatch = text.match(/\[([^\]]+)\]\(https:\/\/supplier\.getyourguide/)
-  if (tourMatch) data.tour = tourMatch[1].trim()
-
-  const dateMatch = text.match(/(\w+,\s*\d{1,2}\s+de\s+\w+\s+de\s+\d{4})/i)
-  if (dateMatch) data.date = dateMatch[1].trim()
-
-  const timeMatch = text.match(/(\d{1,2}:\d{2}\s*(?:a\.\s*m\.|p\.\s*m\.|AM|PM)?)/i)
-  if (timeMatch) data.time = timeMatch[1].replace(/\s+/g, " ").trim()
-
-  const codeMatch = text.match(/\[([A-Z0-9]{10,20})\]/)
-  if (codeMatch) data.confirmation = codeMatch[1]
-
-  const guestMatch = text.match(/(\d+)\s+personas?/i)
-  if (guestMatch) data.guests = parseInt(guestMatch[1])
-
-  const amountMatch = text.match(/(\d+)\s+personas? - \$(\d+[\d.]*)/i)
-  if (amountMatch) data.amount = `$${amountMatch[2]}`
-
-  const nameMatch = text.match(/\* Viajero principal\s*\n([^\n(]+)/i)
-  if (nameMatch) data.clientName = nameMatch[1].trim()
-
-  const phoneMatch = text.match(/\[(\+[\d\s]+)\]\(tel:/)
-  if (phoneMatch) data.phone = phoneMatch[1].trim()
-
-  const locationMatch = text.match(/Ubicación\s*\n([^\n,]+)/i)
-  if (locationMatch) data.hotel = locationMatch[1].trim()
-  else {
-    const hotelMatch = text.match(/whala![^\n,]*/i)
-    if (hotelMatch) data.hotel = hotelMatch[0].trim()
+  // Tour name - Look for the title at the beginning
+  const tourMatch = text.match(/^([^\n]+?)(?:\n|$)/)
+  if (tourMatch && !tourMatch[1].includes("predeterminado") && !tourMatch[1].includes("default")) {
+    data.tour = tourMatch[1].trim()
   }
 
-  const commissionMatch = text.match(/(\d+,\d+)%/)
-  if (commissionMatch) data.commission = `${commissionMatch[1]}%`
+  // Date - Spanish or English format
+  // Spanish: "23 de junio de 2026" or "23 junio 2026"
+  // English: "Jun 23, 2026" or "June 23, 2026"
+  const dateMatchES = text.match(/(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})/)
+  const dateMatchEN = text.match(/(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2},?\s+\d{4}/)
+  const dateMatchENShort = text.match(/(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}/)
+  const dateMatchSimple = text.match(/\b(\d{1,2})\s+(\w+)\s+(\d{4})\b/)
 
-  const langMatch = text.match(/Guía en directo:\s*(.+?)(?:\n|$)/i)
-  if (langMatch) data.language = langMatch[1].trim()
+  if (dateMatchES) {
+    data.date = `${dateMatchES[1]} de ${dateMatchES[2]} de ${dateMatchES[3]}`
+  } else if (dateMatchEN) {
+    data.date = dateMatchEN[0]
+  } else if (dateMatchENShort) {
+    data.date = dateMatchENShort[0]
+  } else if (dateMatchSimple) {
+    data.date = `${dateMatchSimple[1]} ${dateMatchSimple[2]} ${dateMatchSimple[3]}`
+  }
+
+  // Confirmation code - Alphanumeric string in brackets or standalone
+  const codeMatch = text.match(/([A-Z0-9]{10,20})(?:\n|$)/m)
+  if (codeMatch) {
+    data.confirmation = codeMatch[1]
+  }
+
+  // Participants/Travelers count - Always try to get adults and children breakdown first
+  const adultsMatch = text.match(/(\d+)\s+(?:adultos?|adults?)\s*\(/i)
+  const childrenMatch = text.match(/(\d+)\s+(?:niños?|child|children|jóvenes?|young people)\s*\(/i)
+
+  let totalGuests = 0
+  let adultsCount = 0
+  let childrenCount = 0
+
+  // First priority: look for specific adult/child breakdown
+  if (adultsMatch || childrenMatch) {
+    if (adultsMatch) {
+      adultsCount = parseInt(adultsMatch[1])
+      totalGuests += adultsCount
+    }
+    if (childrenMatch) {
+      childrenCount = parseInt(childrenMatch[1])
+      totalGuests += childrenCount
+    }
+  } else {
+    // Fallback: use total participants count if no breakdown found
+    const participantsMatchES = text.match(/(\d+)\s+participantes?/)
+    const participantsMatchEN = text.match(/(\d+)\s+participants?/)
+
+    if (participantsMatchES) {
+      totalGuests = parseInt(participantsMatchES[1])
+    } else if (participantsMatchEN) {
+      totalGuests = parseInt(participantsMatchEN[1])
+    }
+  }
+
+  if (totalGuests > 0) {
+    data.guests = totalGuests
+    data.adults = adultsCount > 0 ? adultsCount : undefined
+    data.children = childrenCount > 0 ? childrenCount : undefined
+  }
+
+  // Pickup time - Spanish or English
+  // Spanish: "entre las 6:30 y las 7:00 de la mañana"
+  // English: "between 6:30 AM and 7:00 AM"
+  const timeMatchES = text.match(/entre\s+las\s+(\d{1,2}):(\d{2})\s+y\s+las\s+(\d{1,2}):(\d{2})/)
+  const timeMatchEN = text.match(/between\s+(\d{1,2}):(\d{2})\s+(?:AM|PM|am|pm)?\s+and\s+(\d{1,2}):(\d{2})\s+(?:AM|PM|am|pm)?/)
+  const timeMatchSimple = text.match(/(\d{1,2}):(\d{2})\s*(?:AM|PM|am|pm)?/)
+
+  if (timeMatchES) {
+    data.time = `${timeMatchES[1]}:${timeMatchES[2]}`
+  } else if (timeMatchEN) {
+    data.time = `${timeMatchEN[1]}:${timeMatchEN[2]}`
+  } else if (timeMatchSimple) {
+    data.time = `${timeMatchSimple[1]}:${timeMatchSimple[2]}`
+  }
+
+  // Lead traveler/Viajero principal
+  const nameMatchES = text.match(/Viajero\s+principal\s*\n\s*([^\n(]+)/)
+  const nameMatchEN = text.match(/Lead\s+traveler\s*\n\s*([^\n(]+)/)
+
+  if (nameMatchES) {
+    data.clientName = nameMatchES[1].trim()
+  } else if (nameMatchEN) {
+    data.clientName = nameMatchEN[1].trim()
+  }
+
+  // Phone number
+  const phoneMatch = text.match(/\+\d[\d\s\-()]+/)
+  if (phoneMatch) {
+    data.phone = phoneMatch[0].trim()
+  }
+
+  // Hotel/Location - Spanish or English (multiple patterns)
+  const locationPatterns = [
+    /Ubicación\s*\n\s*([^\n]+)/i,
+    /Location\s*\n\s*([^\n]+)/i,
+    /Hotel\s*\n\s*([^\n]+)/i,
+    /Accommodation\s*\n\s*([^\n]+)/i,
+    /Alojamiento\s*\n\s*([^\n]+)/i,
+    /Pickup location\s*\n\s*([^\n]+)/i,
+  ]
+
+  for (const pattern of locationPatterns) {
+    const match = text.match(pattern)
+    if (match) {
+      const location = match[1].trim()
+      if (location && location.length > 2) {
+        data.hotel = location
+        break
+      }
+    }
+  }
+
+  // Amount/Price
+  const amountMatch = text.match(/\$\s*([\d,.]+)/)
+  if (amountMatch) {
+    data.amount = `$${amountMatch[1]}`
+  }
+
+  // Commission - Spanish or English
+  const commissionMatchES = text.match(/(\d+[.,]\d+)\s*%/)
+  const commissionMatchEN = text.match(/(\d+\.\d+)\s*%/)
+
+  if (commissionMatchES) {
+    data.commission = `${commissionMatchES[1]}%`
+  } else if (commissionMatchEN) {
+    data.commission = `${commissionMatchEN[1]}%`
+  }
+
+  // Language - Spanish or English
+  const languageMatchES = text.match(/Guía\s+en\s+directo:\s*([^\n]+)/)
+  const languageMatchEN = text.match(/Live\s+guide:\s*([^\n]+)/)
+
+  if (languageMatchES) {
+    data.language = languageMatchES[1].trim()
+  } else if (languageMatchEN) {
+    data.language = languageMatchEN[1].trim()
+  }
 
   return data
 }
 
 export function generateDriverMessage(b: Booking): string {
-  return `🏨 Hotel: ${b.hotel || "___"}
-📍 Meeting point: ${b.meetingPoint || "Lobby"}
-🕖 Pick-up time: ${b.time || "___"}
-👤 Client: ${b.clientName || "___"} (${b.guests || "?"} people)
-📞 Phone: ${b.phone || "___"}`
+  let passengerInfo = `${b.guests || "?"} people`
+  if (b.adults || b.children) {
+    const adults = b.adults ? `${b.adults} adults` : ""
+    const children = b.children ? `${b.children} children` : ""
+    passengerInfo = [adults, children].filter(Boolean).join(", ")
+  }
+
+  const tourTitle = (b.tour || "TOUR").toUpperCase()
+
+  const lines = [
+    `*${tourTitle}*`,
+    `📅 Date: ${b.date || "___"}`,
+    `🏨 Hotel: ${b.hotel || "___"}`,
+    `📍 Meeting point: ${b.meetingPoint || "Lobby"}`,
+    `🕖 Pick-up time: ${b.time || "___"}`,
+    `👤 Client: ${b.clientName || "___"} (${passengerInfo})`,
+    `📞 Phone: ${b.phone || "___"}`,
+  ]
+
+  if (b.confirmation) {
+    lines.push(`🎟️ ${b.confirmation}`)
+  }
+
+  lines.push(`*PUNTACA TOURS*`)
+
+  return lines.join("\n")
 }
 
 export function generateClientMessage(b: Booking): string {

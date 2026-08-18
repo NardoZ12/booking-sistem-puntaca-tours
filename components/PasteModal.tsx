@@ -7,7 +7,7 @@ import { type Booking, parseViatorBooking, parseGYGBooking, ALL_TOURS } from "@/
 interface PasteModalProps {
   source: "viator" | "gyg"
   onClose: () => void
-  onAdd: (b: Booking) => void
+  onAdd: (b: Booking) => void | boolean | Promise<void | boolean>
 }
 
 const CONFIG = {
@@ -17,26 +17,42 @@ const CONFIG = {
 
 export default function PasteModal({ source, onClose, onAdd }: PasteModalProps) {
   const [text, setText] = useState("")
-  const [step, setStep] = useState<"paste" | "review">("paste")
+  const [step, setStep] = useState<"paste" | "edit_details" | "review">("paste")
   const [fields, setFields] = useState<Partial<Booking>>({})
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState("")
   const cfg = CONFIG[source]
 
   const parse = () => {
     const data = cfg.parse(text)
     data.meetingPoint = data.meetingPoint || "Lobby"
     setFields(data)
-    setStep("review")
+    setStep("edit_details")
   }
 
-  const submit = () => {
-    onAdd({
-      ...(fields as Booking),
-      id: Date.now(),
-      source,
-      rawText: text,
-      createdAt: new Date().toISOString(),
-    })
-    onClose()
+  const submit = async () => {
+    setSaving(true)
+    setSaveError("")
+    try {
+      const result = await onAdd({
+        ...(fields as Booking),
+        id: Date.now(),
+        source,
+        rawText: text,
+        createdAt: new Date().toISOString(),
+      })
+      // If the handler explicitly returns false, the save failed.
+      if (result === false) {
+        setSaveError("No se pudo guardar la reserva en la base de datos. Revisa la conexión con Supabase e inténtalo de nuevo.")
+        setSaving(false)
+        return
+      }
+      onClose()
+    } catch (err) {
+      console.error("Error saving booking:", err)
+      setSaveError("Ocurrió un error al guardar la reserva. Inténtalo de nuevo.")
+      setSaving(false)
+    }
   }
 
   const editFields: [string, keyof Booking][] = [
@@ -50,8 +66,14 @@ export default function PasteModal({ source, onClose, onAdd }: PasteModalProps) 
     ["# Personas", "guests"],
   ]
 
+  const editableFields: [string, keyof Booking][] = [
+    ["Hotel", "hotel"],
+    ["Punto de Recogida", "meetingPoint"],
+    ["Hora de Recogida", "time"],
+  ]
+
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" translate="no">
       <div className="bg-neutral-900 border border-neutral-700 rounded-xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
         {/* Modal header */}
         <div className="flex items-center justify-between p-5 border-b border-neutral-700">
@@ -63,7 +85,7 @@ export default function PasteModal({ source, onClose, onAdd }: PasteModalProps) 
               {cfg.label}
             </span>
             <span className="text-sm font-medium text-white tracking-wider">
-              {step === "paste" ? "PEGAR RESERVA" : "REVISAR Y CONFIRMAR"}
+              {step === "paste" ? "PEGAR RESERVA" : step === "edit_details" ? "EDITAR DETALLES" : "REVISAR Y CONFIRMAR"}
             </span>
           </div>
           <button onClick={onClose} className="text-neutral-500 hover:text-white bg-transparent border-0 cursor-pointer">
@@ -82,6 +104,7 @@ export default function PasteModal({ source, onClose, onAdd }: PasteModalProps) 
                 onChange={(e) => setText(e.target.value)}
                 placeholder={`Pegar texto de reserva de ${cfg.label}…`}
                 className="w-full min-h-48 p-3 text-sm rounded-lg bg-neutral-800 border border-neutral-600 text-white font-mono leading-relaxed resize-y outline-none focus:border-orange-500 placeholder-neutral-600"
+                translate="no"
               />
               <div className="flex gap-3 mt-4">
                 <button
@@ -100,10 +123,43 @@ export default function PasteModal({ source, onClose, onAdd }: PasteModalProps) 
                 </button>
               </div>
             </>
+          ) : step === "edit_details" ? (
+            <>
+              <p className="text-sm text-neutral-400 mb-4">
+                Por favor, verifica y edita estos detalles importantes:
+              </p>
+              <div className="space-y-4">
+                {editableFields.map(([label, key]) => (
+                  <div key={key}>
+                    <label className="text-xs text-neutral-500 block mb-2 font-semibold">{label}</label>
+                    <input
+                      value={String(fields[key] || "")}
+                      onChange={(e) => setFields((f) => ({ ...f, [key]: e.target.value }))}
+                      className="w-full text-sm px-4 py-2.5 rounded-lg bg-neutral-800 border border-neutral-600 text-white focus:border-orange-500 outline-none"
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setStep("review")}
+                  className="flex-1 py-2.5 text-sm rounded-lg cursor-pointer font-medium tracking-wider"
+                  style={{ background: cfg.color, color: "#fff", border: "none" }}
+                >
+                  CONTINUAR
+                </button>
+                <button
+                  onClick={() => setStep("paste")}
+                  className="px-4 py-2.5 text-sm rounded-lg bg-transparent border border-neutral-600 text-neutral-400 cursor-pointer hover:border-neutral-400"
+                >
+                  Atrás
+                </button>
+              </div>
+            </>
           ) : (
             <>
               <p className="text-sm text-neutral-400 mb-4">
-                Revisa los datos extraídos. Puedes editar cualquier campo antes de guardar.
+                Revisa todos los datos. Puedes editar cualquier campo antes de guardar.
               </p>
               <div className="grid grid-cols-2 gap-3 mb-4">
                 {editFields.map(([label, key]) => (
@@ -121,6 +177,15 @@ export default function PasteModal({ source, onClose, onAdd }: PasteModalProps) 
                           {ALL_TOURS.map((t) => <option key={t} value={t} />)}
                         </datalist>
                       </>
+                    ) : key === "guests" ? (
+                      <div className="text-sm px-3 py-2 rounded-lg bg-neutral-800 border border-neutral-600 text-white">
+                        {fields.guests}
+                        {fields.adults || fields.children ? (
+                          <span className="text-xs text-neutral-400 ml-2">
+                            ({[fields.adults && `${fields.adults} adults`, fields.children && `${fields.children} children`].filter(Boolean).join(", ")})
+                          </span>
+                        ) : null}
+                      </div>
                     ) : (
                       <input
                         value={String(fields[key] || "")}
@@ -131,17 +196,24 @@ export default function PasteModal({ source, onClose, onAdd }: PasteModalProps) 
                   </div>
                 ))}
               </div>
+              {saveError && (
+                <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-sm text-red-400 mb-3">
+                  {saveError}
+                </div>
+              )}
               <div className="flex gap-3">
                 <button
                   onClick={submit}
-                  className="flex-1 py-2.5 text-sm rounded-lg cursor-pointer font-medium tracking-wider"
+                  disabled={saving}
+                  className="flex-1 py-2.5 text-sm rounded-lg cursor-pointer font-medium tracking-wider transition-colors disabled:opacity-50"
                   style={{ background: cfg.color, color: "#fff", border: "none" }}
                 >
-                  GUARDAR RESERVA
+                  {saving ? "GUARDANDO..." : "GUARDAR RESERVA"}
                 </button>
                 <button
-                  onClick={() => setStep("paste")}
-                  className="px-4 py-2.5 text-sm rounded-lg bg-transparent border border-neutral-600 text-neutral-400 cursor-pointer hover:border-neutral-400"
+                  onClick={() => setStep("edit_details")}
+                  disabled={saving}
+                  className="px-4 py-2.5 text-sm rounded-lg bg-transparent border border-neutral-600 text-neutral-400 cursor-pointer hover:border-neutral-400 disabled:opacity-50"
                 >
                   Atrás
                 </button>

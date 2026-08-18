@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Copy, Check, Edit2, Trash2, X, Save } from "lucide-react"
+import { Copy, Check, Edit2, Trash2, X, Save, Ticket } from "lucide-react"
 import { type Booking, generateDriverMessage, generateClientMessage, ALL_TOURS } from "@/lib/bookings"
+import TicketModal from "./TicketModal"
 
 const SOURCE_COLORS: Record<string, string> = {
   viator: "#00A680",
@@ -24,6 +25,7 @@ interface BookingCardProps {
 export default function BookingCard({ booking, onUpdate, onDelete }: BookingCardProps) {
   const [editing, setEditing] = useState(false)
   const [showMessages, setShowMessages] = useState(false)
+  const [showTicket, setShowTicket] = useState(false)
   const [copied, setCopied] = useState<"driver" | "client" | "">("")
   const [fields, setFields] = useState<Booking>({ ...booking })
 
@@ -68,45 +70,53 @@ export default function BookingCard({ booking, onUpdate, onDelete }: BookingCard
   ]
 
   return (
-    <div className="bg-neutral-900 border border-neutral-700 rounded-lg mb-4 overflow-hidden hover:border-orange-500/40 transition-colors">
-      {/* Header */}
-      <div className="px-4 py-3 border-b border-neutral-700 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0 flex-1">
-          <span
-            className="text-xs font-medium px-2 py-0.5 rounded flex-shrink-0"
-            style={{ background: srcColor + "22", color: srcColor, border: `1px solid ${srcColor}44` }}
-          >
-            {srcLabel}
-          </span>
-          <span className="text-sm font-medium text-white truncate">
-            {fields.tour || "Sin tour asignado"}
-          </span>
+    <>
+      <div className="bg-neutral-900 border border-neutral-700 rounded-lg mb-4 overflow-hidden hover:border-orange-500/40 transition-colors">
+        {/* Header */}
+        <div className="px-4 py-3 border-b border-neutral-700 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <span
+              className="text-xs font-medium px-2 py-0.5 rounded flex-shrink-0"
+              style={{ background: srcColor + "22", color: srcColor, border: `1px solid ${srcColor}44` }}
+            >
+              {srcLabel}
+            </span>
+            <span className="text-sm font-medium text-white truncate">
+              {fields.tour || "Sin tour asignado"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => setShowTicket(true)}
+              className="text-neutral-400 hover:text-yellow-500 bg-transparent border-0 cursor-pointer p-1"
+              title="Descargar ticket"
+            >
+              <Ticket className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => { setShowMessages(!showMessages); setEditing(false) }}
+              className={`text-xs px-3 py-1 rounded border cursor-pointer transition-colors ${
+                showMessages
+                  ? "border-orange-500 text-orange-500 bg-orange-500/10"
+                  : "border-neutral-600 text-neutral-400 hover:border-neutral-400 bg-transparent"
+              }`}
+            >
+              Mensajes
+            </button>
+            <button
+              onClick={() => { setEditing(!editing); setShowMessages(false) }}
+              className="text-neutral-400 hover:text-orange-500 bg-transparent border-0 cursor-pointer p-1"
+            >
+              {editing ? <X className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
+            </button>
+            <button
+              onClick={() => onDelete(booking.id!)}
+              className="text-neutral-600 hover:text-red-500 bg-transparent border-0 cursor-pointer p-1"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <button
-            onClick={() => { setShowMessages(!showMessages); setEditing(false) }}
-            className={`text-xs px-3 py-1 rounded border cursor-pointer transition-colors ${
-              showMessages
-                ? "border-orange-500 text-orange-500 bg-orange-500/10"
-                : "border-neutral-600 text-neutral-400 hover:border-neutral-400 bg-transparent"
-            }`}
-          >
-            Mensajes
-          </button>
-          <button
-            onClick={() => { setEditing(!editing); setShowMessages(false) }}
-            className="text-neutral-400 hover:text-orange-500 bg-transparent border-0 cursor-pointer p-1"
-          >
-            {editing ? <X className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
-          </button>
-          <button
-            onClick={() => onDelete(booking.id!)}
-            className="text-neutral-600 hover:text-red-500 bg-transparent border-0 cursor-pointer p-1"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
 
       {/* Body */}
       <div className="p-4">
@@ -217,5 +227,8 @@ export default function BookingCard({ booking, onUpdate, onDelete }: BookingCard
         )}
       </div>
     </div>
+
+      {showTicket && <TicketModal booking={booking} onClose={() => setShowTicket(false)} />}
+    </>
   )
 }

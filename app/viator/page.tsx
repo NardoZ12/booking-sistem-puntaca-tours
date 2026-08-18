@@ -7,13 +7,13 @@ import PasteModal from "@/components/PasteModal"
 import { type Booking } from "@/lib/bookings"
 
 interface Props {
-  bookings: Booking[]
-  onAdd: (b: Booking) => void
-  onUpdate: (b: Booking) => void
-  onDelete: (id: number) => void
+  bookings?: Booking[]
+  onAdd?: (b: Booking) => void
+  onUpdate?: (b: Booking) => void
+  onDelete?: (id: number) => void
 }
 
-export default function ViatorPage({ bookings, onAdd, onUpdate, onDelete }: Props) {
+export default function ViatorPage({ bookings = [], onAdd = () => {}, onUpdate = () => {}, onDelete = () => {} }: Props) {
   const [modal, setModal] = useState(false)
   const [search, setSearch] = useState("")
 
@@ -26,7 +26,7 @@ export default function ViatorPage({ bookings, onAdd, onUpdate, onDelete }: Prop
   )
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
       {modal && (
         <PasteModal source="viator" onClose={() => setModal(false)} onAdd={onAdd} />
       )}
